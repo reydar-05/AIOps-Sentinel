@@ -1,0 +1,17 @@
+{
+  "Records": [
+    {
+      "EventSource": "aws:sns",
+      "EventVersion": "1.0",
+      "EventSubscriptionArn": "arn:aws:sns:ap-south-1:652197206400:aiops-alerts-dev:abc123",
+      "Sns": {
+        "Type": "Notification",
+        "MessageId": "mock-message-id-001",
+        "TopicArn": "arn:aws:sns:ap-south-1:652197206400:aiops-alerts-dev",
+        "Subject": "ALARM: aiops-high-cpu-dev",
+        "Timestamp": "2024-01-15T10:30:00.000Z",
+        "Message": "{\"AlarmName\":\"aiops-high-cpu-dev\",\"AlarmDescription\":\"EC2 CPU utilization exceeded 80%\",\"AWSAccountId\":\"652197206400\",\"AlarmConfigurationUpdatedTimestamp\":\"2024-01-15T09:00:00.000Z\",\"NewStateValue\":\"ALARM\",\"NewStateReason\":\"Threshold Crossed: 2 datapoints [92.5 (15/01/24 10:28:00), 88.3 (15/01/24 10:27:00)] were greater than or equal to the threshold (80.0).\",\"StateChangeTime\":\"2024-01-15T10:30:00.000Z\",\"Region\":\"ap-south-1\",\"OldStateValue\":\"OK\",\"Trigger\":{\"MetricName\":\"CPUUtilization\",\"Namespace\":\"AWS/EC2\",\"StatisticType\":\"Statistic\",\"Statistic\":\"AVERAGE\",\"Unit\":null,\"Dimensions\":[{\"value\":\"aiops-asg-dev\",\"name\":\"AutoScalingGroupName\"}],\"Period\":60,\"EvaluationPeriods\":2,\"ComparisonOperator\":\"GreaterThanOrEqualToThreshold\",\"Threshold\":80.0,\"TreatMissingData\":\"notBreaching\",\"EvaluateLowSampleCountPercentile\":\"\"}}"
+      }
+    }
+  ]
+}

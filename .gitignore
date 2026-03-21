@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.so
+.venv/
+venv/
+env/
+ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environment variables — NEVER commit secrets
+.env
+.env.*
+!.env.example
+
+# AWS credentials — NEVER commit
+.aws/
+credentials
+*.pem
+*.key
+
+# Terraform
+terraform/.terraform/
+terraform/**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+terraform/**/.terraform.lock.hcl
+
+# Lambda deployment packages
+*.zip
+lambda_packages/
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+coverage.xml
+*.cover
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Secrets Manager local cache
+secrets_cache/
+
+# CDK
+cdk.out/

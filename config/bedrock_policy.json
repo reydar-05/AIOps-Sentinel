@@ -1,0 +1,18 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BedrockInvokeScoped",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:ap-south-1::foundation-model/*",
+        "arn:aws:bedrock:ap-south-1:652197206400:inference-profile/*",
+        "arn:aws:bedrock:*::foundation-model/*"
+      ]
+    }
+  ]
+}

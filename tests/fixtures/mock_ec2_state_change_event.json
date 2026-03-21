@@ -1,0 +1,17 @@
+{
+  "Records": [
+    {
+      "EventSource": "aws:sns",
+      "EventVersion": "1.0",
+      "EventSubscriptionArn": "arn:aws:sns:ap-south-1:652197206400:aiops-alerts-dev:abc123",
+      "Sns": {
+        "Type": "Notification",
+        "MessageId": "mock-message-id-002",
+        "TopicArn": "arn:aws:sns:ap-south-1:652197206400:aiops-alerts-dev",
+        "Subject": "EC2 Instance State Change",
+        "Timestamp": "2024-01-15T10:35:00.000Z",
+        "Message": "{\"version\":\"0\",\"id\":\"mock-event-id-001\",\"source\":\"aws.ec2\",\"account\":\"652197206400\",\"time\":\"2024-01-15T10:35:00Z\",\"region\":\"ap-south-1\",\"detail-type\":\"EC2 Instance State-change Notification\",\"detail\":{\"instance-id\":\"i-0abc123def456789\",\"state\":\"stopped\"}}"
+      }
+    }
+  ]
+}

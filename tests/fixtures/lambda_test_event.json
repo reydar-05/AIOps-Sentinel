@@ -1,0 +1,11 @@
+{
+  "Records": [
+    {
+      "EventSource": "aws:sns",
+      "Sns": {
+        "TopicArn": "arn:aws:sns:ap-south-1:652197206400:aiops-alerts-dev",
+        "Message": "{\"AlarmName\":\"aiops-high-cpu-dev\",\"NewStateValue\":\"ALARM\",\"NewStateReason\":\"CPU at 92.5%\",\"StateChangeTime\":\"2026-03-21T13:30:00Z\",\"Region\":\"ap-south-1\",\"OldStateValue\":\"OK\",\"AWSAccountId\":\"652197206400\",\"Trigger\":{\"MetricName\":\"CPUUtilization\",\"Dimensions\":[{\"name\":\"AutoScalingGroupName\",\"value\":\"aiops-asg-dev\"}],\"Period\":60,\"EvaluationPeriods\":2,\"Threshold\":80.0}}"
+      }
+    }
+  ]
+}
