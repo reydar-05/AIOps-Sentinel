@@ -26,11 +26,14 @@ RETRY_DELAY = 2  # seconds
 def _is_anthropic(model_id: str) -> bool:
     return "anthropic" in model_id.lower()
 
+def _is_titan(model_id: str) -> bool:
+    return "titan" in model_id.lower()
+
 
 def invoke(prompt: str) -> dict:
     """
     Send prompt to Bedrock and return parsed JSON response.
-    Supports both Anthropic Claude and Amazon Nova model formats.
+    Supports Anthropic Claude, Amazon Nova, and Amazon Titan formats.
     Retries up to MAX_RETRIES times on transient errors.
     """
     for attempt in range(1, MAX_RETRIES + 1):
@@ -47,8 +50,18 @@ def invoke(prompt: str) -> dict:
                     "temperature": 0.1,
                     "top_p": 0.9
                 })
+            elif _is_titan(MODEL_ID):
+                # Amazon Titan Text format
+                body = json.dumps({
+                    "inputText": prompt,
+                    "textGenerationConfig": {
+                        "maxTokenCount": MAX_TOKENS,
+                        "temperature": 0.1,
+                        "topP": 0.9
+                    }
+                })
             else:
-                # Amazon Nova / Titan format
+                # Amazon Nova format
                 body = json.dumps({
                     "messages": [{"role": "user", "content": [{"text": prompt}]}],
                     "inferenceConfig": {
@@ -70,6 +83,9 @@ def invoke(prompt: str) -> dict:
             # Parse response based on model family
             if _is_anthropic(MODEL_ID):
                 raw_text = response_body["content"][0]["text"].strip()
+            elif _is_titan(MODEL_ID):
+                # Amazon Titan response format
+                raw_text = response_body["results"][0]["outputText"].strip()
             else:
                 # Amazon Nova response format
                 raw_text = response_body["output"]["message"]["content"][0]["text"].strip()

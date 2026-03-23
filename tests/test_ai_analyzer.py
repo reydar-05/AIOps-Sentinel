@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../lambda/ai_analyze
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../ai/prompts"))
 
 os.environ["AWS_REGION"]       = "ap-south-1"
-os.environ["BEDROCK_MODEL_ID"] = "apac.anthropic.claude-3-5-sonnet-20241022-v2:0"
+os.environ["BEDROCK_MODEL_ID"] = os.environ.get("BEDROCK_MODEL_ID", "apac.anthropic.claude-3-5-sonnet-20241022-v2:0")
 os.environ["BEDROCK_MAX_TOKENS"] = "2048"
 os.environ["ENVIRONMENT"]      = "dev"
 

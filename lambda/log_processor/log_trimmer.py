@@ -47,7 +47,8 @@ def trim(log_text: str) -> str:
             normal_lines.append(line)
 
     # ── 2. Take last N normal lines (most recent) ──────────────────
-    normal_lines = normal_lines[-(MAX_LINES - len(priority_lines)):]
+    keep = max(1, MAX_LINES - len(priority_lines))
+    normal_lines = normal_lines[-keep:]
 
     # ── 3. Truncate normal lines by chars (priority lines always kept) ──
     normal_text = "\n".join(normal_lines)

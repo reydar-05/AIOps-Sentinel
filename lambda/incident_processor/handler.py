@@ -67,9 +67,31 @@ def lambda_handler(event, context):
         logger.info("Logs processed: %d chars", payload["log_char_count"])
 
         # ── 4. AI analysis ─────────────────────────────────────────
-        enriched = analyze(payload)
-        severity = enriched.get("ai_analysis", {}).get("severity", "UNKNOWN")
-        logger.info("AI analysis complete | severity: %s", severity)
+        try:
+            enriched = analyze(payload)
+            severity = enriched.get("ai_analysis", {}).get("severity", "UNKNOWN")
+            logger.info("AI analysis complete | severity: %s", severity)
+        except Exception as ai_err:
+            logger.warning("AI analysis unavailable — using fallback: %s", str(ai_err))
+            enriched = dict(payload)
+            enriched["ai_analysis"] = {
+                "summary": "AI analysis unavailable — manual review required",
+                "root_cause": "Bedrock AI analysis could not be completed at this time",
+                "severity": "HIGH",
+                "severity_reason": "Defaulted to HIGH — AI unavailable",
+                "affected_components": [payload.get("error_type", "unknown")],
+                "immediate_actions": [
+                    "Review CloudWatch logs manually",
+                    "Check the affected instance or service",
+                    "Escalate if issue persists"
+                ],
+                "long_term_fix": "Restore Bedrock AI access for automated analysis",
+                "pattern_detected": False,
+                "pattern_description": None,
+                "confidence": "LOW",
+                "estimated_impact": "Unknown — manual review needed"
+            }
+            severity = "HIGH"
 
         # ── 5. Save to DynamoDB ────────────────────────────────────
         _save_incident(enriched)
