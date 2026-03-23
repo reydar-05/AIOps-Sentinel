@@ -60,6 +60,7 @@ variable "cpu_alarm_threshold" {
 variable "alert_email" {
   description = "Email address for SNS alert notifications"
   type        = string
+  default     = ""
 }
 
 variable "bedrock_model_id" {

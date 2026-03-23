@@ -43,10 +43,10 @@ module "networking" {
 
 # ── IAM ───────────────────────────────────────────────────────────
 module "iam" {
-  source      = "../../modules/iam"
-  environment = var.environment
-  aws_account_id = var.aws_account_id
-  aws_region  = var.aws_region
+  source         = "../../modules/iam"
+  environment    = var.environment
+  aws_account_id = data.aws_caller_identity.current.account_id
+  aws_region     = var.aws_region
 }
 
 # ── SNS ───────────────────────────────────────────────────────────
@@ -55,6 +55,7 @@ resource "aws_sns_topic" "aiops_alerts" {
 }
 
 resource "aws_sns_topic_subscription" "email_alert" {
+  count     = var.alert_email != "" ? 1 : 0
   topic_arn = aws_sns_topic.aiops_alerts.arn
   protocol  = "email"
   endpoint  = var.alert_email
@@ -91,7 +92,7 @@ module "lambda" {
   source                    = "../../modules/lambda"
   environment               = var.environment
   aws_region                = var.aws_region
-  aws_account_id            = var.aws_account_id
+  aws_account_id            = data.aws_caller_identity.current.account_id
   sns_topic_arn             = aws_sns_topic.aiops_alerts.arn
   lambda_execution_role_arn = module.iam.lambda_execution_role_arn
   bedrock_model_id          = var.bedrock_model_id
