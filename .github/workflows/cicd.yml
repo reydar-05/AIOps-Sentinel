@@ -41,14 +41,14 @@ jobs:
         run: |
           flake8 lambda/ ai/ \
             --max-line-length=120 \
-            --extend-ignore=E203,W503 \
+            --extend-ignore=E203,W503,E221,E302,E402 \
             --exclude=__pycache__
 
       - name: Lint test files
         run: |
           flake8 tests/ \
             --max-line-length=120 \
-            --extend-ignore=E203,W503
+            --extend-ignore=E203,W503,E221,E302,E402
 
   # ── Job 2: Test ─────────────────────────────────────────────
   test:

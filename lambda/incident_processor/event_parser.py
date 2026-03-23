@@ -70,7 +70,7 @@ def _parse_cloudwatch_alarm(message: dict, sns_record: dict) -> dict:
             asg_name = dim.get("value")
 
     # Derive log group from alarm name
-    log_group = f"/aws/ec2/aiops" if instance_id else "/aws/lambda/aiops-incident-processor-dev"
+    log_group = "/aws/ec2/aiops" if instance_id else "/aws/lambda/aiops-incident-processor-dev"
 
     return {
         "incident_id": str(uuid.uuid4()),
@@ -108,7 +108,7 @@ def _parse_ec2_state_change(message: dict, sns_record: dict) -> dict:
         "old_state": "RUNNING",
         "reason": f"EC2 instance {instance_id} transitioned to {state}",
         "timestamp": timestamp,
-        "log_group": f"/aws/ec2/aiops",
+        "log_group": "/aws/ec2/aiops",
         "region": region,
         "account_id": message.get("account", ""),
         "sns_topic_arn": sns_record.get("TopicArn", ""),

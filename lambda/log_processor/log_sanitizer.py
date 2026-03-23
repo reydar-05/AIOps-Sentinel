@@ -45,7 +45,6 @@ def sanitize(log_text: str) -> str:
     for pattern, replacement in PATTERNS:
         sanitized = pattern.sub(replacement, sanitized)
 
-    redacted_count = log_text.count("\n") - sanitized.count("\n")
     logger.debug("Sanitized logs: %d → %d chars", original_length, len(sanitized))
 
     return sanitized
