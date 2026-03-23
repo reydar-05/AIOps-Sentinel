@@ -254,7 +254,7 @@ resource "aws_cloudwatch_dashboard" "aiops_main" {
         properties = {
           title  = "🚨 Active Alarms"
           alarms = [
-            "arn:aws:cloudwatch:${var.aws_region}:${var.aws_account_id}:alarm:aiops-high-cpu-${var.environment}"
+            "arn:aws:cloudwatch:${var.aws_region}:${data.aws_caller_identity.current.account_id}:alarm:aiops-high-cpu-${var.environment}"
           ]
         }
       }

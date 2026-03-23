@@ -12,13 +12,14 @@ terraform {
     }
   }
 
-  # For production: use S3 backend for shared state
-  # backend "s3" {
-  #   bucket = "aiops-terraform-state"
-  #   key    = "dev/terraform.tfstate"
-  #   region = "ap-south-1"
-  # }
+  backend "s3" {
+    bucket = "aiops-terraform-state-652197206400"
+    key    = "dev/terraform.tfstate"
+    region = "ap-south-1"
+  }
 }
+
+data "aws_caller_identity" "current" {}
 
 provider "aws" {
   region = var.aws_region
