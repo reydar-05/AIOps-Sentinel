@@ -25,9 +25,12 @@ resource "aws_lambda_function" "incident_processor" {
       ENVIRONMENT         = var.environment
       AWS_ACCOUNT_ID_VAR  = var.aws_account_id
       BEDROCK_MODEL_ID    = var.bedrock_model_id
+      BEDROCK_MAX_TOKENS  = var.bedrock_max_tokens
       DYNAMODB_TABLE_NAME = "${var.dynamodb_table_name}-${var.environment}"
       S3_LOG_BUCKET       = "${var.s3_log_bucket}-${var.environment}"
+      SNS_TOPIC_ARN       = var.sns_topic_arn
       SLACK_SECRET_NAME   = var.slack_secret_name
+      GROQ_API_KEY        = var.groq_api_key
       LOG_LEVEL           = "INFO"
     }
   }

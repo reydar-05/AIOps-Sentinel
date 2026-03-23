@@ -97,6 +97,8 @@ module "lambda" {
   dynamodb_table_name       = var.dynamodb_table_name
   s3_log_bucket             = var.s3_log_bucket
   slack_secret_name         = var.slack_secret_name
+  groq_api_key              = var.groq_api_key
+  bedrock_max_tokens        = "2048"
 }
 
 # ── DynamoDB ──────────────────────────────────────────────────────

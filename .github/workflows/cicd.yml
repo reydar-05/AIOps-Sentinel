@@ -123,10 +123,14 @@ jobs:
       - name: Terraform Plan
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform plan -var-file=terraform.tfvars -out=tfplan
+        env:
+          TF_VAR_groq_api_key: ${{ secrets.GROQ_API_KEY }}
 
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform apply -auto-approve tfplan
+        env:
+          TF_VAR_groq_api_key: ${{ secrets.GROQ_API_KEY }}
 
   # ── Job 4: Deploy Lambda ────────────────────────────────────
   deploy-lambda:

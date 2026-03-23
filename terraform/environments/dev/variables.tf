@@ -85,3 +85,10 @@ variable "slack_secret_name" {
   type        = string
   default     = "aiops/slack/webhook"
 }
+
+variable "groq_api_key" {
+  description = "OpenRouter/Groq API key for fallback AI analysis"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
