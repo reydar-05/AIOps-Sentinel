@@ -12,6 +12,10 @@ on:
   pull_request:
     branches: [main]
 
+# Lint + Test run on every push/PR.
+# Deploy jobs only run on main push AND only when relevant files change.
+# Docs-only changes (README, STARTUP, *.md) skip the deploy jobs entirely.
+
 env:
   AWS_REGION:        ap-south-1
   FUNCTION_NAME:     aiops-incident-processor-dev
@@ -94,7 +98,10 @@ jobs:
     name: Terraform Apply
     runs-on: ubuntu-latest
     needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push' &&
+      !startsWith(github.event.head_commit.message, 'docs:')
 
     steps:
       - name: Checkout code
@@ -143,7 +150,10 @@ jobs:
     name: Deploy Lambda Function
     runs-on: ubuntu-latest
     needs: deploy-infra
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push' &&
+      !startsWith(github.event.head_commit.message, 'docs:')
 
     steps:
       - name: Checkout code

@@ -1,154 +1,250 @@
-# AIOps Sentinel
+<div align="center">
 
-**AI-Driven Automated Infrastructure Monitoring and Incident Intelligence System**
+# 🛡️ AIOps Sentinel
 
-AIOps Sentinel is a production-grade, serverless incident response platform built on AWS. When a CloudWatch alarm fires or an EC2 instance changes state, it automatically fetches logs, sanitizes them, runs AI-powered root cause analysis, persists the incident to DynamoDB, and delivers a structured Slack alert — all within seconds.
+### AI-Driven Automated Infrastructure Monitoring & Incident Intelligence
+
+[![CI/CD](https://github.com/reydar-05/AIOps-Sentinel/actions/workflows/cicd.yml/badge.svg)](https://github.com/reydar-05/AIOps-Sentinel/actions/workflows/cicd.yml)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-1.7+-7B42BC?logo=terraform&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS-ap--south--1-FF9900?logo=amazonaws&logoColor=white)
+![Lambda](https://img.shields.io/badge/Lambda-Python%203.12-FF9900?logo=awslambda&logoColor=white)
+![DynamoDB](https://img.shields.io/badge/DynamoDB-Incidents-4053D6?logo=amazondynamodb&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-22c55e)
+
+<br/>
+
+> **When your infrastructure breaks, AIOps Sentinel detects it, fetches the logs, asks AI what went wrong, and tells your team on Slack — in under 7 seconds.**
+
+<br/>
+
+```
+  CloudWatch Alarm  ──┐
+                      ├──▶  SNS  ──▶  Lambda Pipeline  ──▶  DynamoDB
+  EC2 State Change  ──┘                                 └──▶  Slack Alert
+```
+
+</div>
 
 ---
 
-## Architecture Overview
+## ✨ What It Does
+
+| Step | What Happens |
+|------|-------------|
+| 🔔 **Detects** | CloudWatch alarm fires (CPU > 80%, disk full, instance crash) or EC2 state changes |
+| 📋 **Fetches Logs** | Pulls the last 15 minutes of CloudWatch logs for the affected instance |
+| 🔒 **Sanitizes** | Strips IPs, AWS keys, credentials, emails before any external call |
+| ✂️ **Trims** | Intelligently caps logs to 4 000 chars — keeps error lines, drops noise |
+| 🧠 **AI Analysis** | Amazon Bedrock (or OpenRouter fallback) produces structured root cause analysis |
+| 💾 **Persists** | Writes incident to DynamoDB with 30-day TTL |
+| 💬 **Alerts** | Posts a rich, color-coded Slack message in ~5 seconds |
+
+---
+
+## 🏗️ Architecture
 
 ```
-CloudWatch Alarm ─┐
-                  ├──► SNS Topic ──► Lambda Pipeline ──► DynamoDB
-EventBridge       ┘         │                       └──► Slack Alert
-(EC2 state)                 └──► Email (optional)
-                             └──► SQS DLQ (on failure)
-```
-
-### Lambda Pipeline (6 steps, ~3–7 seconds end-to-end)
-
-```
-SNS Event
-  │
-  ├─ 1. Event Parser      Parse CloudWatch alarm or EC2 state-change into normalized incident
-  ├─ 2. Log Fetcher       Fetch last 15 min of CloudWatch logs for the affected instance
-  ├─ 3. Log Sanitizer     Redact IPs, AWS keys, credentials, emails, internal DNS
-  ├─ 4. Log Trimmer       Intelligently cap logs to 4 000 chars (priority error lines kept)
-  ├─ 5. AI Analyzer       Root cause analysis via Amazon Bedrock → OpenRouter fallback
-  ├─ 6a. DynamoDB Write   Persist incident with 30-day TTL
-  └─ 6b. Slack Alert      Post rich Block Kit message color-coded by severity
+┌─────────────────────────────────────────────────────────────────────┐
+│                        TRIGGER LAYER                                │
+│                                                                     │
+│   ┌──────────────────────┐    ┌──────────────────────────────┐     │
+│   │  CloudWatch Alarms   │    │  EventBridge (EC2 state)     │     │
+│   │  • CPU > 80%         │    │  • stopped / terminated      │     │
+│   │  • Status check fail │    │  • stopping                  │     │
+│   │  • Network anomaly   │    └──────────────┬───────────────┘     │
+│   └──────────┬───────────┘                   │                     │
+└──────────────┼───────────────────────────────┼─────────────────────┘
+               └──────────────┬────────────────┘
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                         SNS TOPIC                                   │
+│               aiops-alerts-dev                                      │
+│    ┌──────────────┬─────────────────┬──────────────┐               │
+│    ▼              ▼                 ▼               ▼               │
+│  Lambda         Email           SQS DLQ         (future)           │
+│  (primary)    (optional)      (on failure)                         │
+└────┬────────────────────────────────────────────────────────────────┘
+     │
+     ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                     LAMBDA PIPELINE                                 │
+│              aiops-incident-processor-dev                           │
+│              Python 3.12 │ 512 MB │ 300s timeout                   │
+│                                                                     │
+│  1. Event Parser   ──▶  Normalize CloudWatch / EC2 event           │
+│  2. Log Fetcher    ──▶  15-min CloudWatch logs                      │
+│  3. Log Sanitizer  ──▶  Redact secrets, IPs, credentials           │
+│  4. Log Trimmer    ──▶  4 000-char intelligent truncation           │
+│  5. AI Analyzer    ──▶  Bedrock RCA  ──(fallback)──▶  OpenRouter   │
+│  6a. DynamoDB      ──▶  Persist incident (30-day TTL)              │
+│  6b. Slack         ──▶  Block Kit alert                             │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## AWS Infrastructure
+## 🧠 AI-Powered Root Cause Analysis
 
-| Resource | Name | Purpose |
-|---|---|---|
-| Lambda | `aiops-incident-processor-dev` | Main pipeline (Python 3.12, 512 MB, 300s) |
-| SNS Topic | `aiops-alerts-dev` | Fan-out from CloudWatch/EventBridge |
-| DynamoDB | `aiops-incidents-dev` | Incident store (pay-per-request, 30-day TTL) |
-| S3 Bucket | `aiops-log-archive-dev` | Log archiving (IA → Glacier → delete lifecycle) |
-| SQS | `aiops-lambda-dlq-dev` | Dead letter queue (14-day retention) |
-| Secrets Manager | `aiops/slack/webhook` | Slack webhook URL |
-| CloudWatch Alarms | `aiops-high-cpu-dev` + 3 more | CPU, status check, network |
-| CloudWatch Dashboard | `AIOps-Sentinel-dev` | Live infrastructure intelligence view |
-| EC2 / ASG | `aiops-asg-dev` | Auto-scaled app servers (t3.micro, min 1 / max 3) |
-| ALB | `aiops-alb-dev` | Load balancer for EC2 fleet |
-| VPC | `10.0.0.0/16` | Isolated network with public + private subnets |
-| S3 (state) | `aiops-terraform-state-652197206400` | Shared Terraform remote state |
-| X-Ray | Active tracing | Lambda distributed tracing |
-
----
-
-## AI Analysis
-
-The AI analyzer produces structured JSON for every incident:
+Every incident gets a structured AI response:
 
 ```json
 {
-  "summary": "One-line description of what happened",
-  "root_cause": "Technical 2–3 sentence explanation",
-  "severity": "CRITICAL | HIGH | MEDIUM | LOW",
-  "affected_components": ["EC2", "Auto Scaling", "DynamoDB"],
-  "immediate_actions": ["Restart the service", "Scale up ASG"],
-  "long_term_fix": "Architectural recommendation",
-  "pattern_detected": true,
-  "pattern_description": "Memory leak every ~2 hours since last deployment",
-  "confidence": "HIGH | MEDIUM | LOW",
-  "estimated_impact": "Complete service unavailability for ~5 min"
+  "summary":             "Java heap exhaustion caused complete service outage",
+  "root_cause":          "OOM triggered by unbounded cache growth in DataProcessor.java. GC overhead exceeded 98%, causing all threads to halt.",
+  "severity":            "HIGH",
+  "severity_reason":     "Full service unavailability, no self-recovery observed",
+  "affected_components": ["EC2", "Auto Scaling Group", "ALB"],
+  "immediate_actions":   ["Restart affected instances", "Increase JVM heap to 4GB", "Scale ASG to 3 instances"],
+  "long_term_fix":       "Implement bounded cache with LRU eviction and add memory pressure alarms",
+  "pattern_detected":    true,
+  "pattern_description": "OOM crash recurring every ~2 hours since v2.3.1 deployment",
+  "confidence":          "HIGH",
+  "estimated_impact":    "~5 min full outage, ~200 users affected"
 }
 ```
 
-**Model priority:**
-1. Amazon Bedrock (Claude 3.5 Sonnet / Nova Lite — configured via `BEDROCK_MODEL_ID`)
-2. OpenRouter free tier (Gemma, Nemotron, Qwen, GPT-OSS — iterates until one succeeds)
-3. Hardcoded fallback (HIGH severity, manual review required)
+### Model Priority Chain
+
+```
+1. 🥇 Amazon Bedrock     →  Claude 3.5 Sonnet / Nova Lite (configurable)
+2. 🥈 OpenRouter Free    →  Gemma 3N → Nemotron 9B → Qwen3 4B → GPT-OSS 20B
+3. 🥉 Hardcoded Fallback →  HIGH severity, manual review flag
+```
 
 ---
 
-## Slack Alert Format
+## 💬 Slack Alert Preview
 
-Each alert is a color-coded Slack Block Kit message:
+```
+┌────────────────────────────────────────────────────────────┐
+│ 🔴  AIOps Sentinel Alert — HIGH                            │
+├────────────────────────────────────────────────────────────┤
+│ Java heap exhaustion caused complete service outage        │
+├────────────────────────────────────────────────────────────┤
+│ Incident ID   │ abc-1234-...                               │
+│ Environment   │ dev                                        │
+│ Alarm         │ aiops-high-cpu-dev                         │
+│ Instance      │ i-0abc123def456789                         │
+│ Region        │ ap-south-1                                 │
+│ Confidence    │ HIGH                                       │
+├────────────────────────────────────────────────────────────┤
+│ Root Cause                                                  │
+│ OOM triggered by unbounded cache growth...                 │
+├────────────────────────────────────────────────────────────┤
+│ Immediate Actions                                           │
+│ • Restart affected instances                               │
+│ • Increase JVM heap to 4GB                                 │
+│ • Scale ASG to 3 instances                                 │
+├────────────────────────────────────────────────────────────┤
+│ ⚠️  Recurring Pattern: OOM every ~2h since v2.3.1          │
+└────────────────────────────────────────────────────────────┘
+```
 
-| Severity | Color |
-|---|---|
-| CRITICAL | Red `#FF0000` |
-| HIGH | Orange `#FF6600` |
-| MEDIUM | Yellow `#FFD700` |
-| LOW | Blue `#0066CC` |
-
-Fields included: incident ID, alarm name, instance ID, region, root cause, immediate actions, long-term fix, estimated impact, affected components, confidence, and a pattern warning if a recurring issue is detected.
+**Severity colors:** 🔴 CRITICAL &nbsp;|&nbsp; 🟠 HIGH &nbsp;|&nbsp; 🟡 MEDIUM &nbsp;|&nbsp; 🔵 LOW
 
 ---
 
-## Repository Structure
+## ☁️ AWS Infrastructure
+
+<table>
+<tr><th>Resource</th><th>Name</th><th>Purpose</th></tr>
+<tr><td>⚡ Lambda</td><td><code>aiops-incident-processor-dev</code></td><td>Main pipeline (512 MB, 300s, X-Ray)</td></tr>
+<tr><td>📣 SNS</td><td><code>aiops-alerts-dev</code></td><td>Alarm fan-out to Lambda + email</td></tr>
+<tr><td>🗄️ DynamoDB</td><td><code>aiops-incidents-dev</code></td><td>Incident store (pay-per-request, 30-day TTL)</td></tr>
+<tr><td>🪣 S3</td><td><code>aiops-log-archive-dev</code></td><td>Log archiving (IA → Glacier → delete)</td></tr>
+<tr><td>💀 SQS DLQ</td><td><code>aiops-lambda-dlq-dev</code></td><td>Failed events (14-day retention)</td></tr>
+<tr><td>🔐 Secrets Manager</td><td><code>aiops/slack/webhook</code></td><td>Slack webhook URL</td></tr>
+<tr><td>📊 CloudWatch</td><td><code>aiops-high-cpu-dev</code> +3</td><td>CPU, status check, network alarms</td></tr>
+<tr><td>📈 Dashboard</td><td><code>AIOps-Sentinel-dev</code></td><td>Live infrastructure intelligence view</td></tr>
+<tr><td>🖥️ EC2 / ASG</td><td><code>aiops-asg-dev</code></td><td>Auto-scaled fleet (t3.micro, 1–3 instances)</td></tr>
+<tr><td>⚖️ ALB</td><td><code>aiops-alb-dev</code></td><td>Load balancer (public subnets, multi-AZ)</td></tr>
+<tr><td>🌐 VPC</td><td><code>10.0.0.0/16</code></td><td>Isolated network, public + private subnets</td></tr>
+<tr><td>🪣 S3 (state)</td><td><code>aiops-terraform-state-*</code></td><td>Shared Terraform remote state</td></tr>
+</table>
+
+---
+
+## 🚀 CI/CD Pipeline
+
+Every push to `main` triggers a 4-stage GitHub Actions pipeline:
+
+```
+Push to main
+     │
+     ▼
+┌─────────┐    ┌─────────┐    ┌────────────────────┐    ┌────────────────┐
+│  Lint   │───▶│  Test   │───▶│ Deploy Infra       │───▶│ Deploy Lambda  │
+│         │    │         │    │ (Terraform)        │    │                │
+│ flake8  │    │ 3 test  │    │ init → validate    │    │ package + zip  │
+│ lambda/ │    │ suites  │    │ plan → apply       │    │ upload to AWS  │
+│ ai/     │    │ no AWS  │    │ S3 remote state    │    │ smoke test     │
+│ tests/  │    │ needed  │    │                    │    │                │
+└─────────┘    └─────────┘    └────────────────────┘    └────────────────┘
+  ~30s           ~60s               ~2 min                   ~45s
+```
+
+> ⚠️ **Note:** Infrastructure and Lambda deploy jobs only run on pushes to `main` (not PRs).
+
+### GitHub Secrets Required
+
+| Secret | Description |
+|--------|-------------|
+| `AWS_ACCESS_KEY_ID` | IAM user access key |
+| `AWS_SECRET_ACCESS_KEY` | IAM user secret key |
+| `AWS_ACCOUNT_ID` | 12-digit AWS account ID |
+| `ALERT_EMAIL` | Email for SNS alerts (optional) |
+| `AMI_ID` | Amazon Linux 2023 AMI for ap-south-1 |
+| `GROQ_API_KEY` | OpenRouter API key (optional fallback) |
+
+---
+
+## 📁 Repository Structure
 
 ```
 AIOps Sentinel/
-├── lambda/
-│   ├── incident_processor/    # handler.py (entry point), event_parser.py, log_fetcher.py
-│   ├── log_processor/         # processor.py, log_sanitizer.py, log_trimmer.py
-│   ├── ai_analyzer/           # analyzer.py, bedrock_client.py, groq_client.py (OpenRouter)
-│   └── notification_handler/  # notifier.py, slack_formatter.py, secrets.py
-├── ai/
-│   └── prompts/rca_prompt.py  # RCA prompt template
-├── config/
-│   └── settings.py            # Central config (env-based)
-├── terraform/
-│   ├── environments/dev/      # main.tf, variables.tf, dashboard.tf
-│   └── modules/               # networking, ec2, iam, lambda, alarms
-├── scripts/
-│   └── deploy_lambda.py       # 5-step deployment script
-├── tests/
-│   ├── fixtures/              # SNS / CloudWatch / EC2 test events
-│   ├── test_local_lambda.py   # Event parser tests (3 tests)
-│   ├── test_log_processor.py  # Sanitizer + trimmer tests (3 tests)
-│   └── test_notifications.py  # Slack formatter tests (4 tests)
-└── .github/
-    └── workflows/cicd.yml     # CI/CD: Lint → Test → Terraform → Lambda deploy
+│
+├── 🔧 lambda/
+│   ├── incident_processor/    # handler.py · event_parser.py · log_fetcher.py
+│   ├── log_processor/         # processor.py · log_sanitizer.py · log_trimmer.py
+│   ├── ai_analyzer/           # analyzer.py · bedrock_client.py · groq_client.py
+│   └── notification_handler/  # notifier.py · slack_formatter.py · secrets.py
+│
+├── 🧠 ai/
+│   └── prompts/rca_prompt.py  # RCA prompt template for Bedrock
+│
+├── ⚙️ config/
+│   └── settings.py            # Central config loaded from environment
+│
+├── 🏗️ terraform/
+│   ├── environments/dev/      # main.tf · variables.tf · dashboard.tf
+│   └── modules/               # networking · ec2 · iam · lambda · alarms
+│
+├── 📜 scripts/
+│   └── deploy_lambda.py       # 5-step Lambda packaging + deployment
+│
+├── 🧪 tests/
+│   ├── fixtures/              # SNS · CloudWatch · EC2 test events
+│   ├── test_local_lambda.py   # Event parser (3 tests)
+│   ├── test_log_processor.py  # Sanitizer + trimmer (3 tests)
+│   └── test_notifications.py  # Slack formatter (4 tests)
+│
+└── 🔄 .github/workflows/
+    └── cicd.yml               # Lint → Test → Terraform → Lambda
 ```
 
 ---
 
-## CI/CD Pipeline
+## 🧪 Testing
 
-GitHub Actions runs on every push to `main`:
+```bash
+# All tests run locally — no AWS credentials needed
+python tests/test_local_lambda.py    # 3 tests: event parsing
+python tests/test_log_processor.py   # 3 tests: sanitize, trim, classify
+python tests/test_notifications.py   # 4 tests: Slack Block Kit formatting
+```
 
-| Job | What it does |
-|---|---|
-| **Lint** | flake8 on all Python code (`lambda/`, `ai/`, `tests/`) |
-| **Test** | Runs 3 test suites — no AWS credentials required |
-| **Deploy Infrastructure** | `terraform plan` + `terraform apply` using S3 remote state |
-| **Deploy Lambda** | Packages + deploys Lambda, then smoke-tests with a real invocation |
-
-### Required GitHub Secrets
-
-| Secret | Description |
-|---|---|
-| `AWS_ACCESS_KEY_ID` | IAM user access key |
-| `AWS_SECRET_ACCESS_KEY` | IAM user secret key |
-| `AWS_ACCOUNT_ID` | Your 12-digit AWS account ID |
-| `ALERT_EMAIL` | Email for SNS subscription (optional) |
-| `AMI_ID` | Amazon Linux 2023 AMI ID for ap-south-1 |
-| `GROQ_API_KEY` | OpenRouter API key (optional AI fallback) |
-
----
-
-## Testing End-to-End
-
-Invoke the Lambda directly with a simulated CloudWatch alarm:
+### End-to-End Test (live AWS)
 
 ```bash
 aws lambda invoke \
@@ -156,74 +252,40 @@ aws lambda invoke \
   --region ap-south-1 \
   --payload file://tests/fixtures/lambda_test_event.json \
   --cli-binary-format raw-in-base64-out \
-  response.json
-cat response.json
+  response.json && cat response.json
 ```
 
-Expected response:
-```json
-{"statusCode": 200, "incident_id": "...", "severity": "HIGH"}
-```
-
-You should receive a Slack alert in the `#aiops-alerts` channel within ~5 seconds.
+Expected: `{"statusCode": 200, "incident_id": "...", "severity": "HIGH"}` + Slack alert in ~5s
 
 ---
 
-## Local Development
+## 🔒 Security
 
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run all tests (no AWS needed)
-python tests/test_local_lambda.py
-python tests/test_log_processor.py
-python tests/test_notifications.py
-
-# Deploy Lambda manually
-python scripts/deploy_lambda.py
-```
+- **IAM least privilege** — Lambda role restricted to `aiops-*` resources only
+- **Secrets Manager** — Slack webhook stored encrypted, fetched at runtime
+- **Log sanitization** — Credentials, IPs, and keys stripped before AI processing
+- **S3 encryption** — AES-256 on all objects, all public access blocked
+- **VPC isolation** — EC2 in private subnets, ALB in public subnets
+- **X-Ray tracing** — Full distributed trace on every Lambda invocation
+- **SQS DLQ** — Failed events retained 14 days for replay
 
 ---
 
-## Security Controls
+## 🛠️ Tech Stack
 
-- **IAM least privilege** — Lambda role scoped to only `aiops-*` resources
-- **Secrets Manager** — Slack webhook never hardcoded or in environment variables (production)
-- **S3 encryption** — AES-256 on all log archive objects
-- **S3 public access block** — All 4 flags enabled
-- **VPC isolation** — EC2 instances in private subnets, ALB in public subnets
-- **Log sanitization** — IPs, AWS keys, credentials, emails redacted before AI processing
-- **X-Ray tracing** — Full distributed trace for every Lambda invocation
-- **SQS DLQ** — Failed Lambda invocations captured for 14 days for replay
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-1.7+-7B42BC?logo=terraform&logoColor=white)
+![AWS Lambda](https://img.shields.io/badge/AWS_Lambda-FF9900?logo=awslambda&logoColor=white)
+![DynamoDB](https://img.shields.io/badge/DynamoDB-4053D6?logo=amazondynamodb&logoColor=white)
+![Amazon SNS](https://img.shields.io/badge/SNS-FF4F8B?logo=amazonaws&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?logo=githubactions&logoColor=white)
 
 ---
 
-## Environment Variables (Lambda)
+<div align="center">
 
-| Variable | Description |
-|---|---|
-| `ENVIRONMENT` | `dev` / `staging` / `prod` |
-| `BEDROCK_MODEL_ID` | Bedrock model (e.g. `amazon.nova-lite-v1:0`) |
-| `BEDROCK_MAX_TOKENS` | Max AI response tokens (default: `2048`) |
-| `DYNAMODB_TABLE_NAME` | DynamoDB table (e.g. `aiops-incidents-dev`) |
-| `S3_LOG_BUCKET` | Log archive bucket (e.g. `aiops-log-archive-dev`) |
-| `SNS_TOPIC_ARN` | SNS topic ARN |
-| `SLACK_SECRET_NAME` | Secrets Manager key for Slack webhook |
-| `GROQ_API_KEY` | OpenRouter API key for AI fallback |
-| `LOG_LEVEL` | `INFO` / `DEBUG` |
+**Built with ❤️ on AWS &nbsp;|&nbsp; Region: ap-south-1 (Mumbai)**
 
----
+*AIOps Sentinel — from alarm to answer in under 7 seconds*
 
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Runtime | Python 3.12 |
-| IaC | Terraform 1.7+ (modular, S3 remote state) |
-| AI | Amazon Bedrock + OpenRouter (multi-model fallback) |
-| Messaging | AWS SNS, SQS |
-| Storage | DynamoDB, S3 |
-| Observability | CloudWatch, X-Ray |
-| CI/CD | GitHub Actions |
-| Region | ap-south-1 (Mumbai) |
+</div>
