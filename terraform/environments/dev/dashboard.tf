@@ -77,12 +77,12 @@ resource "aws_cloudwatch_dashboard" "aiops_main" {
         width  = 4
         height = 3
         properties = {
-          title      = "Incidents Today"
-          view       = "singleValue"
-          sparkline  = true
-          region     = var.aws_region
-          period     = 604800
-          annotations = { "horizontal" = [] }
+          title                = "Incidents Today"
+          view                 = "singleValue"
+          sparkline            = true
+          region               = var.aws_region
+          setPeriodToTimeRange = true
+          annotations          = { "horizontal" = [] }
           metrics = [
             ["AWS/Lambda", "Invocations", "FunctionName", "aiops-incident-processor-${var.environment}", { "stat" = "Sum", "label" = "Total" }]
           ]
@@ -97,12 +97,12 @@ resource "aws_cloudwatch_dashboard" "aiops_main" {
         width  = 4
         height = 3
         properties = {
-          title      = "Pipeline Failures"
-          view       = "singleValue"
-          sparkline  = true
-          region     = var.aws_region
-          period     = 604800
-          annotations = { "horizontal" = [] }
+          title                = "Pipeline Failures"
+          view                 = "singleValue"
+          sparkline            = true
+          region               = var.aws_region
+          setPeriodToTimeRange = true
+          annotations          = { "horizontal" = [] }
           metrics = [
             ["AWS/Lambda", "Errors", "FunctionName", "aiops-incident-processor-${var.environment}", { "stat" = "Sum", "label" = "Failures", "color" = "#d62728" }]
           ]
@@ -117,12 +117,12 @@ resource "aws_cloudwatch_dashboard" "aiops_main" {
         width  = 4
         height = 3
         properties = {
-          title      = "Incidents Saved"
-          view       = "singleValue"
-          sparkline  = true
-          region     = var.aws_region
-          period     = 604800
-          annotations = { "horizontal" = [] }
+          title                = "Incidents Saved"
+          view                 = "singleValue"
+          sparkline            = true
+          region               = var.aws_region
+          setPeriodToTimeRange = true
+          annotations          = { "horizontal" = [] }
           metrics = [
             ["AWS/DynamoDB", "SuccessfulRequestLatency", "TableName", "aiops-incidents-${var.environment}", "Operation", "PutItem", { "stat" = "SampleCount", "label" = "Saved", "color" = "#2ca02c" }]
           ]
