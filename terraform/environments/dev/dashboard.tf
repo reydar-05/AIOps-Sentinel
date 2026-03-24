@@ -84,7 +84,8 @@ resource "aws_cloudwatch_dashboard" "aiops_main" {
           period     = 86400
           annotations = { "horizontal" = [] }
           metrics = [
-            ["AWS/Lambda", "Invocations", "FunctionName", "aiops-incident-processor-${var.environment}", { "stat" = "Sum", "label" = "Total" }]
+            ["AWS/Lambda", "Invocations", "FunctionName", "aiops-incident-processor-${var.environment}", { "stat" = "Sum", "id" = "m1", "visible" = false }],
+            [{ "expression" = "FILL(m1, 0)", "label" = "Total", "color" = "#1f77b4" }]
           ]
         }
       },
