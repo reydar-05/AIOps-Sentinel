@@ -81,7 +81,7 @@ resource "aws_cloudwatch_dashboard" "aiops_main" {
           view       = "singleValue"
           sparkline  = true
           region     = var.aws_region
-          period     = 86400
+          period     = 604800
           annotations = { "horizontal" = [] }
           metrics = [
             ["AWS/Lambda", "Invocations", "FunctionName", "aiops-incident-processor-${var.environment}", { "stat" = "Sum", "id" = "m1", "visible" = false }],
@@ -102,7 +102,7 @@ resource "aws_cloudwatch_dashboard" "aiops_main" {
           view       = "singleValue"
           sparkline  = true
           region     = var.aws_region
-          period     = 86400
+          period     = 604800
           annotations = { "horizontal" = [] }
           metrics = [
             ["AWS/Lambda", "Errors", "FunctionName", "aiops-incident-processor-${var.environment}", { "stat" = "Sum", "id" = "m1", "visible" = false }],
@@ -123,7 +123,7 @@ resource "aws_cloudwatch_dashboard" "aiops_main" {
           view       = "singleValue"
           sparkline  = true
           region     = var.aws_region
-          period     = 86400
+          period     = 604800
           annotations = { "horizontal" = [] }
           metrics = [
             ["AWS/DynamoDB", "SuccessfulRequestLatency", "TableName", "aiops-incidents-${var.environment}", "Operation", "PutItem", { "stat" = "SampleCount", "id" = "m1", "visible" = false }],
