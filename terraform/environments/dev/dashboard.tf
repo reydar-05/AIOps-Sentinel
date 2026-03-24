@@ -104,7 +104,8 @@ resource "aws_cloudwatch_dashboard" "aiops_main" {
           period     = 86400
           annotations = { "horizontal" = [] }
           metrics = [
-            ["AWS/Lambda", "Errors", "FunctionName", "aiops-incident-processor-${var.environment}", { "stat" = "Sum", "label" = "Failures", "color" = "#d62728" }]
+            ["AWS/Lambda", "Errors", "FunctionName", "aiops-incident-processor-${var.environment}", { "stat" = "Sum", "id" = "m1", "visible" = false }],
+            [{ "expression" = "FILL(m1, 0)", "label" = "Failures", "color" = "#d62728" }]
           ]
         }
       },
@@ -124,7 +125,8 @@ resource "aws_cloudwatch_dashboard" "aiops_main" {
           period     = 86400
           annotations = { "horizontal" = [] }
           metrics = [
-            ["AWS/DynamoDB", "SuccessfulRequestLatency", "TableName", "aiops-incidents-${var.environment}", "Operation", "PutItem", { "stat" = "SampleCount", "label" = "Saved", "color" = "#2ca02c" }]
+            ["AWS/DynamoDB", "SuccessfulRequestLatency", "TableName", "aiops-incidents-${var.environment}", "Operation", "PutItem", { "stat" = "SampleCount", "id" = "m1", "visible" = false }],
+            [{ "expression" = "FILL(m1, 0)", "label" = "Saved", "color" = "#2ca02c" }]
           ]
         }
       },
