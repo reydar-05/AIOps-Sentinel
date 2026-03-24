@@ -192,6 +192,7 @@ jobs:
             --region ${{ env.AWS_REGION }} \
             --payload file://tests/fixtures/lambda_test_event.json \
             --cli-binary-format raw-in-base64-out \
+            --cli-read-timeout 360 \
             response.json
           cat response.json
           # Fail if Lambda returned a FunctionError
