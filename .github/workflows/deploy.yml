@@ -1,0 +1,112 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  AWS_REGION: ap-south-1
+  TF_DIR: terraform/environments/dev
+
+jobs:
+  # ── 1. Unit tests (runs on every push and PR) ─────────────────────
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install test dependencies
+        run: pip install boto3 moto pytest pytest-mock
+
+      - name: Run tests
+        run: |
+          python tests/test_local_lambda.py
+          python tests/test_log_processor.py
+          python tests/test_notifications.py
+
+  # ── 2a. Terraform plan (PRs only — for review before merge) ───────
+  plan:
+    name: Terraform Plan
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.0
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Write terraform.tfvars
+        run: |
+          cat > ${{ env.TF_DIR }}/terraform.tfvars << 'EOF'
+          aws_account_id   = "${{ secrets.AWS_ACCOUNT_ID }}"
+          alert_email      = "${{ secrets.ALERT_EMAIL }}"
+          ami_id           = "${{ secrets.AMI_ID }}"
+          groq_api_key     = "${{ secrets.GROQ_API_KEY }}"
+          bedrock_model_id = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
+          EOF
+
+      - name: Terraform Init
+        run: terraform -chdir=${{ env.TF_DIR }} init
+
+      - name: Terraform Plan
+        run: terraform -chdir=${{ env.TF_DIR }} plan -var-file=terraform.tfvars
+
+  # ── 2b. Deploy (main branch only) ─────────────────────────────────
+  deploy:
+    name: Deploy
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.0
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Write terraform.tfvars
+        run: |
+          cat > ${{ env.TF_DIR }}/terraform.tfvars << 'EOF'
+          aws_account_id   = "${{ secrets.AWS_ACCOUNT_ID }}"
+          alert_email      = "${{ secrets.ALERT_EMAIL }}"
+          ami_id           = "${{ secrets.AMI_ID }}"
+          groq_api_key     = "${{ secrets.GROQ_API_KEY }}"
+          bedrock_model_id = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
+          EOF
+
+      - name: Install deploy dependencies
+        run: pip install boto3
+
+      - name: Terraform Init
+        run: terraform -chdir=${{ env.TF_DIR }} init
+
+      - name: Terraform Apply
+        run: terraform -chdir=${{ env.TF_DIR }} apply -auto-approve -var-file=terraform.tfvars
+
+      - name: Deploy Lambda
+        run: python scripts/deploy_lambda.py
