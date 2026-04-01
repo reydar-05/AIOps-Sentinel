@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_MODELS  = [
     "google/gemma-3n-e4b-it:free",
-    "nvidia/nemotron-nano-9b-v2:free",
     "openai/gpt-oss-20b:free",
     "qwen/qwen3-4b:free",
     "z-ai/glm-4.5-air:free",
@@ -64,6 +63,9 @@ def invoke(prompt: str) -> dict:
             error_body = e.read().decode("utf-8")
             logger.warning("OpenRouter model %s failed (%d) — trying next", model, e.code)
             last_error = RuntimeError(f"OpenRouter API error {e.code}: {error_body}")
+        except urllib.error.URLError as e:
+            logger.warning("OpenRouter model %s timed out or unreachable (%s) — trying next", model, e.reason)
+            last_error = RuntimeError(f"OpenRouter URLError: {e.reason}")
 
     raise last_error or RuntimeError("All OpenRouter models failed")
 

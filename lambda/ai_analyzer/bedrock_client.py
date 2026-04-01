@@ -106,11 +106,16 @@ def invoke(prompt: str) -> dict:
             raise
 
         except Exception as e:
+            err_str = str(e)
+            # Permanent errors — no point retrying
+            if "ValidationException" in err_str or "AccessDeniedException" in err_str:
+                logger.error("Bedrock permanent error — skipping retries: %s", err_str)
+                raise
             if attempt == MAX_RETRIES:
                 logger.error("Bedrock invoke failed after %d attempts: %s",
-                             MAX_RETRIES, str(e))
+                             MAX_RETRIES, err_str)
                 raise
-            logger.warning("Attempt %d failed: %s — retrying", attempt, str(e))
+            logger.warning("Attempt %d failed: %s — retrying", attempt, err_str)
             time.sleep(RETRY_DELAY)
 
     raise RuntimeError("Bedrock invoke failed after all retries")
