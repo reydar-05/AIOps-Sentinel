@@ -66,7 +66,7 @@ variable "alert_email" {
 variable "bedrock_model_id" {
   description = "Amazon Bedrock model ID"
   type        = string
-  default     = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+  default     = "apac.amazon.nova-lite-v1:0"
 }
 
 variable "dynamodb_table_name" {

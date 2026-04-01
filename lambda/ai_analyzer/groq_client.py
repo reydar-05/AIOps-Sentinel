@@ -56,7 +56,12 @@ def invoke(prompt: str) -> dict:
         try:
             with urllib.request.urlopen(req, timeout=30) as resp:
                 body = json.loads(resp.read().decode("utf-8"))
-            raw_text = body["choices"][0]["message"]["content"].strip()
+            content = (body.get("choices") or [{}])[0].get("message", {}).get("content")
+            if not content:
+                logger.warning("OpenRouter model %s returned empty content — trying next", model)
+                last_error = RuntimeError(f"Empty response from {model}")
+                continue
+            raw_text = content.strip()
             logger.info("OpenRouter response received — %d chars via %s", len(raw_text), model)
             return _parse_response(raw_text)
         except urllib.error.HTTPError as e:
