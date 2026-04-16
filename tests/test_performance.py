@@ -27,15 +27,15 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../lambda/incident_p
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../lambda/log_processor"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../lambda/notification_handler"))
 
-os.environ["AWS_REGION"]  = "ap-south-1"
+os.environ["AWS_REGION"] = "ap-south-1"
 os.environ["ENVIRONMENT"] = "dev"
-os.environ["LOG_LEVEL"]   = "ERROR"
+os.environ["LOG_LEVEL"] = "ERROR"
 
-from event_parser     import parse_event
-from log_sanitizer    import sanitize
-from log_trimmer      import trim
-from processor        import process
-from slack_formatter  import format_alert
+from event_parser import parse_event  # noqa: E402
+from log_sanitizer import sanitize  # noqa: E402
+from log_trimmer import trim  # noqa: E402
+from processor import process  # noqa: E402
+from slack_formatter import format_alert  # noqa: E402
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
@@ -83,7 +83,7 @@ MOCK_INCIDENT = {
     "region":      "ap-south-1",
     "account_id":  "652197206400",
     "raw_logs":    "\n".join([
-        f"[2024-01-15T10:{i//60:02d}:{i%60:02d}Z] INFO  Request from 10.0.{i%4}.{i%256}:443 "
+        f"[2024-01-15T10:{i // 60:02d}:{i % 60:02d}Z] INFO  Request from 10.0.{i % 4}.{i % 256}:443 "
         f"password=Secret{i} token=eyJ{i}abc user@company.com"
         for i in range(200)
     ]) + "\n[2024-01-15T10:30:00Z] CRITICAL CPU utilization: 92.5%"
@@ -124,7 +124,7 @@ def test_event_parsing_performance():
     print_section("PERF TEST 1: Event Parsing Latency")
     SLO_MS = 10.0  # must parse one event in under 10 ms
 
-    cw_event  = load_fixture("mock_cloudwatch_alarm_event.json")
+    cw_event = load_fixture("mock_cloudwatch_alarm_event.json")
     ec2_event = load_fixture("mock_ec2_state_change_event.json")
 
     _, mn, avg, mx, p95 = bench(parse_event, cw_event, iterations=500)
@@ -169,7 +169,7 @@ def test_sanitizer_performance():
 
     # Large log stress test — 1000 lines
     big_log = "\n".join([
-        f"[2024-01-15T10:00:{i%60:02d}Z] ERROR addr=192.168.{i%256}.{i%10} "
+        f"[2024-01-15T10:00:{i % 60:02d}Z] ERROR addr=192.168.{i % 256}.{i % 10} "
         f"password=s3cr3t{i} secret=topsecret{i} "
         f"user{i}@corp.internal aws_key=AKIA{'X'*16} err=Connection refused"
         for i in range(1000)
@@ -204,7 +204,7 @@ def test_trimmer_performance():
 
     # Worst case: 5000-line log
     big_log = "\n".join([
-        f"[2024-01-15T{i//3600:02d}:{(i//60)%60:02d}:{i%60:02d}Z] "
+        f"[2024-01-15T{i // 3600:02d}:{(i // 60) % 60:02d}:{i % 60:02d}Z] "
         f"{'ERROR' if i % 50 == 0 else 'INFO'} Line {i} {'x'*40}"
         for i in range(5000)
     ])
@@ -246,12 +246,12 @@ def test_full_pipeline_performance():
     assert result["log_line_count"] > 0,                             "FAIL: log_line_count is 0"
     assert result["environment"] == "dev",               "FAIL: environment wrong"
 
-    print(f"\n  Output Validation:")
+    print("\n  Output Validation:")
     print(f"  PASS: All {len(required_keys)} required output fields present")
     print(f"  PASS: error_type    = {result['error_type']}")
     print(f"  PASS: log_chars     = {result['log_char_count']} (reduced from {len(MOCK_INCIDENT['raw_logs'])} chars)")
     print(f"  PASS: log_lines     = {result['log_line_count']}")
-    print(f"  PASS: IPs not present in AI payload (sanitized)")
+    print("  PASS: IPs not present in AI payload (sanitized)")
     print(f"  PASS: processed_at  = {result['processed_at']}")
 
 
@@ -314,7 +314,7 @@ def test_e2e_validation():
 
     # Data integrity: incident_id must flow through all stages
     assert processed["incident_id"] == incident["incident_id"], "FAIL: incident_id mismatch"
-    assert processed["region"]      == incident["region"],      "FAIL: region mismatch"
+    assert processed["region"] == incident["region"], "FAIL: region mismatch"
     print("  PASS: Step 4 — incident_id and region preserved through full pipeline")
 
     print("\n  Full pipeline validated: Parse -> Sanitize -> Trim -> Format")
@@ -326,9 +326,9 @@ def test_e2e_validation():
 def test_burst_processing():
     print_section("PERF TEST 7: Burst Event Processing (50 concurrent simulated)")
 
-    cw_event  = load_fixture("mock_cloudwatch_alarm_event.json")
+    cw_event = load_fixture("mock_cloudwatch_alarm_event.json")
     ec2_event = load_fixture("mock_ec2_state_change_event.json")
-    events    = [cw_event] * 30 + [ec2_event] * 20  # 50 events
+    events = [cw_event] * 30 + [ec2_event] * 20  # 50 events
 
     t0 = time.perf_counter()
     results = []
@@ -379,7 +379,8 @@ if __name__ == "__main__":
             failed += 1
         except Exception as e:
             print(f"\n  ERROR in {name}: {e}")
-            import traceback; traceback.print_exc()
+            import traceback
+            traceback.print_exc()
             failed += 1
 
     print("\n" + "=" * 65)
