@@ -1,0 +1,14 @@
+{
+  "pythonVersion": "3.12",
+  "pythonPlatform": "Linux",
+  "extraPaths": [
+    "lambda/incident_processor",
+    "lambda/log_processor",
+    "lambda/ai_analyzer",
+    "lambda/notification_handler",
+    "ai/prompts",
+    "config"
+  ],
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none"
+}

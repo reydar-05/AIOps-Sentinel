@@ -232,3 +232,14 @@ terraform destroy -var-file=terraform.tfvars
 | ASG | `aiops-asg-dev` |
 | Terraform State Bucket | `aiops-terraform-state-652197206400` |
 | Log Group | `/aws/lambda/aiops-incident-processor-dev` |
+
+## CI/CD Workflow
+
+git add .github/workflows/deploy.yml
+git commit -m "ci: add GitHub Actions CI/CD pipeline"
+git push origin main
+
+## Testing & Validation
+
+$env:PYTHONIOENCODING="utf-8"
+python tests/test_performance.py
