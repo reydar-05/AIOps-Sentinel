@@ -25,12 +25,14 @@ resource "aws_lambda_function" "incident_processor" {
       ENVIRONMENT         = var.environment
       AWS_ACCOUNT_ID_VAR  = var.aws_account_id
       GROQ_MAX_TOKENS     = var.groq_max_tokens
-      DYNAMODB_TABLE_NAME = "${var.dynamodb_table_name}-${var.environment}"
-      S3_LOG_BUCKET       = "${var.s3_log_bucket}-${var.environment}"
-      SNS_TOPIC_ARN       = var.sns_topic_arn
-      GROQ_API_KEY        = var.groq_api_key
-      DISCORD_WEBHOOK_URL = var.discord_webhook_url
-      LOG_LEVEL           = "INFO"
+      DYNAMODB_TABLE_NAME        = "${var.dynamodb_table_name}-${var.environment}"
+      S3_LOG_BUCKET              = "${var.s3_log_bucket}-${var.environment}"
+      SNS_TOPIC_ARN              = var.sns_topic_arn
+      GROQ_API_KEY               = var.groq_api_key
+      GROQ_DAILY_TOKEN_LIMIT     = var.groq_daily_token_limit
+      DISCORD_WEBHOOK_URL        = var.discord_webhook_url
+      DISCORD_REVIEW_WEBHOOK_URL = var.discord_review_webhook_url
+      LOG_LEVEL                  = "INFO"
     }
   }
 

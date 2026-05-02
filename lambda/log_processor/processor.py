@@ -59,7 +59,10 @@ def process(incident: dict) -> dict:
         # Derived metadata
         "error_type":         error_type,
         "processed_at":       datetime.now(timezone.utc).isoformat(),
-        "environment":        os.environ.get("ENVIRONMENT", "dev"),
+        # Prefer the environment carried by the incident; fall back to the
+        # Lambda's own ENVIRONMENT env var only if the incident didn't
+        # specify one.
+        "environment":        incident.get("environment") or os.environ.get("ENVIRONMENT", "dev"),
     }
 
     logger.info("Log processing complete for incident %s | error_type: %s",

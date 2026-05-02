@@ -92,6 +92,19 @@ jobs:
           AWS_REGION:  ap-south-1
           ENVIRONMENT: dev
 
+      # ── Real-world log AI quality gate ────────────────────────
+      # Validates the AI's ability to read real production log formats
+      # and produce summaries that mention actual error keywords without
+      # hallucinating. Skips gracefully if GROQ_API_KEY is not set; fails
+      # only if zero of seven scenarios fully pass.
+      - name: Run real-world log AI quality test
+        run: python tests/test_realworld_logs.py
+        env:
+          AWS_REGION:          ap-south-1
+          ENVIRONMENT:         dev
+          GROQ_API_KEY:        ${{ secrets.GROQ_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
   # ── Job 3: Deploy Infrastructure ────────────────────────────
   deploy-infra:
     name: Terraform Apply

@@ -88,3 +88,16 @@ variable "discord_webhook_url" {
   sensitive   = true
   default     = ""
 }
+
+variable "discord_review_webhook_url" {
+  description = "Optional second Discord webhook for LOW-confidence alerts requiring human review"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "groq_daily_token_limit" {
+  description = "Soft daily token ceiling for Groq usage warnings"
+  type        = string
+  default     = "100000"
+}

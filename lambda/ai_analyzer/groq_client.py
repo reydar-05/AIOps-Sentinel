@@ -22,6 +22,17 @@ GROQ_MODELS = [
 
 MAX_TOKENS = int(os.environ.get("GROQ_MAX_TOKENS", "2048"))
 
+# Soft daily token ceiling. The free tier on Groq is generous (~14,400 req/day
+# on Llama 3.3 70B) but tokens-per-day is the harder limit. When this counter
+# is exceeded the client emits a WARN log line — production should configure
+# CloudWatch metric filters to alarm on these warnings.
+DAILY_TOKEN_LIMIT = int(os.environ.get("GROQ_DAILY_TOKEN_LIMIT", "100000"))
+
+# In-memory counter — resets when the Lambda container is recycled (~hourly).
+# Good enough for soft-cost alerting; for a hard ceiling persist this in
+# DynamoDB or use Groq's own dashboard quotas.
+_tokens_used_today = 0
+
 
 def invoke(prompt: str) -> dict:
     """
@@ -65,6 +76,7 @@ def invoke(prompt: str) -> dict:
                 logger.warning("Groq model %s returned empty content — trying next", model)
                 last_error = RuntimeError(f"Empty response from {model}")
                 continue
+            _track_usage(model, body.get("usage", {}))
             raw_text = content.strip()
             logger.info("Groq response received — %d chars via %s", len(raw_text), model)
             return _parse_response(raw_text)
@@ -77,6 +89,48 @@ def invoke(prompt: str) -> dict:
             last_error = RuntimeError(f"Groq URLError: {e.reason}")
 
     raise last_error or RuntimeError("All Groq models failed")
+
+
+def _track_usage(model: str, usage: dict) -> None:
+    """
+    Record token usage for the most recent Groq call and emit a WARN
+    if cumulative usage exceeds the configured daily ceiling.
+
+    Groq returns OpenAI-compatible usage:
+        {"prompt_tokens": N, "completion_tokens": M, "total_tokens": N+M}
+    """
+    global _tokens_used_today
+    total = int(usage.get("total_tokens", 0))
+    if total <= 0:
+        return
+
+    _tokens_used_today += total
+    logger.info(
+        "Groq tokens | model=%s prompt=%d completion=%d total=%d | running=%d/%d",
+        model,
+        usage.get("prompt_tokens", 0),
+        usage.get("completion_tokens", 0),
+        total,
+        _tokens_used_today,
+        DAILY_TOKEN_LIMIT,
+    )
+
+    if _tokens_used_today > DAILY_TOKEN_LIMIT:
+        logger.warning(
+            "GROQ COST CEILING EXCEEDED — used %d tokens, limit %d. "
+            "Subsequent calls will still be made but should be alarmed on.",
+            _tokens_used_today,
+            DAILY_TOKEN_LIMIT,
+        )
+
+
+def get_usage_summary() -> dict:
+    """Expose the current token counter for tests and dashboards."""
+    return {
+        "tokens_used_in_container": _tokens_used_today,
+        "daily_limit": DAILY_TOKEN_LIMIT,
+        "headroom": max(0, DAILY_TOKEN_LIMIT - _tokens_used_today),
+    }
 
 
 def _parse_response(raw_text: str) -> dict:

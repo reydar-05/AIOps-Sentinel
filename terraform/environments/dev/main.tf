@@ -99,7 +99,9 @@ module "lambda" {
   s3_log_bucket             = var.s3_log_bucket
   groq_api_key              = var.groq_api_key
   groq_max_tokens           = "2048"
+  groq_daily_token_limit    = var.groq_daily_token_limit
   discord_webhook_url       = var.discord_webhook_url
+  discord_review_webhook_url = var.discord_review_webhook_url
 }
 
 # ── DynamoDB ──────────────────────────────────────────────────────
