@@ -13,6 +13,12 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../lambda/ai_analyzer"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../ai/prompts"))
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 os.environ["AWS_REGION"]      = "ap-south-1"
 os.environ["ENVIRONMENT"]     = "dev"
 os.environ.setdefault("GROQ_MAX_TOKENS", "2048")

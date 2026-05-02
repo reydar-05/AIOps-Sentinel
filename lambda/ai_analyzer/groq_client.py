@@ -49,6 +49,8 @@ def invoke(prompt: str) -> dict:
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
+                "User-Agent": "AIOps-Sentinel/1.0",
+                "Accept": "application/json",
             },
             method="POST",
         )
