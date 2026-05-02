@@ -95,12 +95,11 @@ module "lambda" {
   aws_account_id            = data.aws_caller_identity.current.account_id
   sns_topic_arn             = aws_sns_topic.aiops_alerts.arn
   lambda_execution_role_arn = module.iam.lambda_execution_role_arn
-  bedrock_model_id          = var.bedrock_model_id
   dynamodb_table_name       = var.dynamodb_table_name
   s3_log_bucket             = var.s3_log_bucket
   slack_secret_name         = var.slack_secret_name
   groq_api_key              = var.groq_api_key
-  bedrock_max_tokens        = "2048"
+  groq_max_tokens           = "2048"
 }
 
 # ── DynamoDB ──────────────────────────────────────────────────────

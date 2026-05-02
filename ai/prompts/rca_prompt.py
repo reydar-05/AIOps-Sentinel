@@ -1,6 +1,6 @@
 """
-Root Cause Analysis prompt template for Amazon Bedrock.
-Designed for Claude 3.5 Sonnet — structured JSON output.
+Root Cause Analysis prompt template for Groq Llama.
+Designed for structured JSON output (response_format: json_object).
 """
 
 

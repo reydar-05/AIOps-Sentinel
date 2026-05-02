@@ -91,13 +91,13 @@ def test_formatter_content():
     assert "i-0abc123def456789" in message_str,         "FAIL: instance ID missing"
     assert "aiops-high-cpu-dev" in message_str,         "FAIL: alarm name missing"
     assert "Recurring Pattern" in message_str,          "FAIL: pattern warning missing"
-    assert "Amazon Bedrock" in message_str,             "FAIL: footer missing"
+    assert "Groq Llama" in message_str,                 "FAIL: footer missing"
 
     print("PASS: Root cause present in message")
     print("PASS: Instance ID present")
     print("PASS: Alarm name present")
     print("PASS: Pattern warning included")
-    print("PASS: Footer with Bedrock branding")
+    print("PASS: Footer with Groq branding")
 
 
 def test_severity_colors():

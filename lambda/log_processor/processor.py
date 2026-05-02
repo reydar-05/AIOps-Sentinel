@@ -17,7 +17,7 @@ def process(incident: dict) -> dict:
     """
     Full log processing pipeline:
     1. Sanitize  — remove sensitive data
-    2. Trim      — cap tokens for Bedrock
+    2. Trim      — cap tokens for the AI model
     3. Enrich    — add structured metadata
 
     Returns AI-ready payload.

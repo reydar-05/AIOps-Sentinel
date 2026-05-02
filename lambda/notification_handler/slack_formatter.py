@@ -138,7 +138,7 @@ def format_alert(enriched_payload: dict) -> dict:
         "elements": [
             {
                 "type": "mrkdwn",
-                "text": f"AIOps Sentinel | {timestamp} | Powered by Amazon Bedrock"
+                "text": f"AIOps Sentinel | {timestamp} | Powered by Groq Llama"
             }
         ]
     })

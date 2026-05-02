@@ -77,20 +77,6 @@ resource "aws_iam_role_policy" "lambda_policy" {
         Resource = "*"
       },
       {
-        # Bedrock — invoke model + inference profiles
-        Sid    = "BedrockInvoke"
-        Effect = "Allow"
-        Action = [
-          "bedrock:InvokeModel",
-          "bedrock:InvokeModelWithResponseStream"
-        ]
-        Resource = [
-          "arn:aws:bedrock:${var.aws_region}::foundation-model/*",
-          "arn:aws:bedrock:${var.aws_region}:${var.aws_account_id}:inference-profile/*",
-          "arn:aws:bedrock:*::foundation-model/*"
-        ]
-      },
-      {
         # DynamoDB — only the incidents table
         Sid    = "DynamoDBIncidents"
         Effect = "Allow"

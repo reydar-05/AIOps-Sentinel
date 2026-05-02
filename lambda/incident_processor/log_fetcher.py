@@ -40,7 +40,7 @@ def fetch_logs(instance_id: str | None,
             startTime=start_ms,
             endTime=end_ms,
             filterPattern=filter_pattern,
-            limit=100  # Max 100 lines to stay within Bedrock token limits
+            limit=100  # Max 100 lines to stay within AI token limits
         )
 
         events = response.get("events", [])

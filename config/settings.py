@@ -18,11 +18,9 @@ class Settings:
     # Environment
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "dev")
 
-    # Bedrock
-    BEDROCK_MODEL_ID: str = os.getenv(
-        "BEDROCK_MODEL_ID", "anthropic.claude-3-sonnet-20240229-v1:0"
-    )
-    BEDROCK_MAX_TOKENS: int = int(os.getenv("BEDROCK_MAX_TOKENS", "2048"))
+    # Groq AI
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    GROQ_MAX_TOKENS: int = int(os.getenv("GROQ_MAX_TOKENS", "2048"))
 
     # SNS
     SNS_TOPIC_ARN: str = os.getenv("SNS_TOPIC_ARN", "")

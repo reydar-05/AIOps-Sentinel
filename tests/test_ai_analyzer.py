@@ -1,6 +1,7 @@
 """
-Local test for AI Analyzer — calls real Amazon Bedrock.
-Requires valid AWS credentials with Bedrock access.
+Local test for AI Analyzer — calls real Groq API.
+Requires GROQ_API_KEY environment variable to be set
+(get a free key at https://console.groq.com/keys).
 
 Usage:
     python tests/test_ai_analyzer.py
@@ -8,24 +9,21 @@ Usage:
 
 import sys
 import os
-import json
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../lambda/ai_analyzer"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../ai/prompts"))
 
-os.environ["AWS_REGION"]       = "ap-south-1"
-os.environ["BEDROCK_MODEL_ID"] = os.environ.get("BEDROCK_MODEL_ID", "apac.anthropic.claude-3-5-sonnet-20241022-v2:0")
-os.environ["BEDROCK_MAX_TOKENS"] = "2048"
-os.environ["ENVIRONMENT"]      = "dev"
+os.environ["AWS_REGION"]      = "ap-south-1"
+os.environ["ENVIRONMENT"]     = "dev"
+os.environ.setdefault("GROQ_MAX_TOKENS", "2048")
 
 from rca_prompt import build_rca_prompt
-from bedrock_client import invoke
 from analyzer import analyze
 
 
-# ── Mock processed payload (output of Phase 4) ────────────────────
+# ── Mock processed payload (output of log_processor) ───────────────
 MOCK_PAYLOAD = {
-    "incident_id":    "test-bedrock-001",
+    "incident_id":    "test-groq-001",
     "timestamp":      "2024-01-15T10:30:00Z",
     "instance_id":    "i-0abc123def456789",
     "asg_name":       "aiops-asg-dev",
@@ -46,7 +44,7 @@ MOCK_PAYLOAD = {
 [2024-01-15T10:29:45Z] ERROR Disk usage at 98% on /dev/xvda1
 [2024-01-15T10:30:00Z] CRITICAL CPU utilization: 92.5%""",
     "log_char_count": 742,
-    "log_line_count": 8
+    "log_line_count": 8,
 }
 
 
@@ -57,10 +55,10 @@ def print_section(title):
 
 
 def test_prompt_builder():
-    print_section("TEST 1: Prompt Builder (no AWS call)")
+    print_section("TEST 1: Prompt Builder (no API call)")
     prompt = build_rca_prompt(MOCK_PAYLOAD)
 
-    assert "incident_id" in prompt.lower() or "test-bedrock-001" in prompt
+    assert "incident_id" in prompt.lower() or "test-groq-001" in prompt
     assert "HIGH_CPU" in prompt
     assert "92.5" in prompt
     assert "OutOfMemoryError" in prompt
@@ -72,10 +70,15 @@ def test_prompt_builder():
     print(prompt[:300])
 
 
-def test_bedrock_rca():
-    print_section("TEST 2: Bedrock RCA (real AWS call)")
-    print("Calling Amazon Bedrock Claude 3.5 Sonnet...")
-    print("This may take 5-15 seconds...\n")
+def test_groq_rca():
+    print_section("TEST 2: Groq RCA (real API call)")
+    if not os.environ.get("GROQ_API_KEY"):
+        print("SKIP: GROQ_API_KEY not set — set it to run this test")
+        print("      Get a free key at https://console.groq.com/keys")
+        return
+
+    print("Calling Groq Llama 3.3 70B...")
+    print("This usually takes under 2 seconds...\n")
 
     result = analyze(MOCK_PAYLOAD)
     analysis = result.get("ai_analysis", {})
@@ -119,7 +122,7 @@ if __name__ == "__main__":
     print("\nAIOps Sentinel — AI Analyzer Tests")
     passed = failed = 0
 
-    for test in [test_prompt_builder, test_bedrock_rca]:
+    for test in [test_prompt_builder, test_groq_rca]:
         try:
             test()
             passed += 1

@@ -1,6 +1,6 @@
 """
-Log Trimmer — trims logs to stay within Bedrock token limits.
-Claude has a context window but we keep prompts lean for cost + speed.
+Log Trimmer — trims logs to stay within AI token limits.
+Groq Llama has a generous context window but we keep prompts lean for cost + speed.
 
 Strategy:
   - Keep LAST N lines (most recent = most relevant)

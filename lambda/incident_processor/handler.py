@@ -76,7 +76,7 @@ def lambda_handler(event, context):
             enriched = dict(payload)
             enriched["ai_analysis"] = {
                 "summary": "AI analysis unavailable — manual review required",
-                "root_cause": "Bedrock AI analysis could not be completed at this time",
+                "root_cause": "Groq AI analysis could not be completed at this time",
                 "severity": "HIGH",
                 "severity_reason": "Defaulted to HIGH — AI unavailable",
                 "affected_components": [payload.get("error_type", "unknown")],
@@ -85,7 +85,7 @@ def lambda_handler(event, context):
                     "Check the affected instance or service",
                     "Escalate if issue persists"
                 ],
-                "long_term_fix": "Restore Bedrock AI access for automated analysis",
+                "long_term_fix": "Restore Groq API access for automated analysis",
                 "pattern_detected": False,
                 "pattern_description": None,
                 "confidence": "LOW",

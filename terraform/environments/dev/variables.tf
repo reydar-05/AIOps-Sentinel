@@ -63,12 +63,6 @@ variable "alert_email" {
   default     = ""
 }
 
-variable "bedrock_model_id" {
-  description = "Amazon Bedrock model ID"
-  type        = string
-  default     = "apac.amazon.nova-lite-v1:0"
-}
-
 variable "dynamodb_table_name" {
   description = "DynamoDB table name for incidents"
   type        = string
@@ -88,7 +82,7 @@ variable "slack_secret_name" {
 }
 
 variable "groq_api_key" {
-  description = "OpenRouter/Groq API key for fallback AI analysis"
+  description = "Groq API key (https://console.groq.com) for AI root cause analysis"
   type        = string
   sensitive   = true
   default     = ""
