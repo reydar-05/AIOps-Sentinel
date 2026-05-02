@@ -29,7 +29,7 @@ jobs:
         run: |
           python tests/test_local_lambda.py
           python tests/test_log_processor.py
-          python tests/test_notifications.py
+          python tests/test_discord.py
 
   # ── 2a. Terraform plan (PRs only — for review before merge) ───────
   plan:
@@ -42,6 +42,7 @@ jobs:
       TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
       TF_VAR_ami_id: ${{ secrets.AMI_ID }}
       TF_VAR_groq_api_key: ${{ secrets.GROQ_API_KEY }}
+      TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -72,6 +73,7 @@ jobs:
       TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
       TF_VAR_ami_id: ${{ secrets.AMI_ID }}
       TF_VAR_groq_api_key: ${{ secrets.GROQ_API_KEY }}
+      TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
     steps:
       - uses: actions/checkout@v4
 

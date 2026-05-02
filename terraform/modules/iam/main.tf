@@ -104,15 +104,6 @@ resource "aws_iam_role_policy" "lambda_policy" {
         ]
       },
       {
-        # Secrets Manager — only aiops secrets
-        Sid    = "SecretsManager"
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue"
-        ]
-        Resource = "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:aiops/*"
-      },
-      {
         # SNS — publish to aiops topics only
         Sid    = "SNSPublish"
         Effect = "Allow"

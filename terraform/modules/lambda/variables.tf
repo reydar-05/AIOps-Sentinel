@@ -5,7 +5,6 @@ variable "sns_topic_arn" { type = string }
 variable "lambda_execution_role_arn" { type = string }
 variable "dynamodb_table_name" { type = string }
 variable "s3_log_bucket" { type = string }
-variable "slack_secret_name" { type = string }
 
 variable "groq_api_key" {
   type      = string
@@ -16,4 +15,10 @@ variable "groq_api_key" {
 variable "groq_max_tokens" {
   type    = string
   default = "2048"
+}
+
+variable "discord_webhook_url" {
+  type      = string
+  default   = ""
+  sensitive = true
 }

@@ -97,9 +97,9 @@ module "lambda" {
   lambda_execution_role_arn = module.iam.lambda_execution_role_arn
   dynamodb_table_name       = var.dynamodb_table_name
   s3_log_bucket             = var.s3_log_bucket
-  slack_secret_name         = var.slack_secret_name
   groq_api_key              = var.groq_api_key
   groq_max_tokens           = "2048"
+  discord_webhook_url       = var.discord_webhook_url
 }
 
 # ── DynamoDB ──────────────────────────────────────────────────────
@@ -215,21 +215,3 @@ resource "aws_sns_topic_policy" "allow_eventbridge" {
   })
 }
 
-# ── Secrets Manager (Slack webhook placeholder) ───────────────────
-resource "aws_secretsmanager_secret" "slack_webhook" {
-  name                    = var.slack_secret_name
-  description             = "Slack webhook URL for AIOps alerts"
-  recovery_window_in_days = 7
-}
-
-resource "aws_secretsmanager_secret_version" "slack_webhook_value" {
-  secret_id     = aws_secretsmanager_secret.slack_webhook.id
-  secret_string = jsonencode({
-    webhook_url = "https://hooks.slack.com/services/REPLACE_ME"
-    channel     = "#aiops-alerts"
-  })
-
-  lifecycle {
-    ignore_changes = [secret_string]  # Don't overwrite after manual update
-  }
-}

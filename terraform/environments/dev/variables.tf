@@ -75,14 +75,15 @@ variable "s3_log_bucket" {
   default     = "aiops-log-archive"
 }
 
-variable "slack_secret_name" {
-  description = "Secrets Manager secret name for Slack webhook"
-  type        = string
-  default     = "aiops/slack/webhook"
-}
-
 variable "groq_api_key" {
   description = "Groq API key (https://console.groq.com) for AI root cause analysis"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "discord_webhook_url" {
+  description = "Discord webhook URL for incident notifications"
   type        = string
   sensitive   = true
   default     = ""

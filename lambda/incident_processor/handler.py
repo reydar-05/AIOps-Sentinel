@@ -20,7 +20,7 @@ from event_parser import parse_event
 from log_fetcher import fetch_logs
 from processor import process
 from analyzer import analyze
-from notifier import send_slack_alert
+from notifier import send_alert
 
 import boto3
 
@@ -38,7 +38,7 @@ def lambda_handler(event, context):
     3. Process + sanitize logs
     4. AI root cause analysis
     5. Save incident to DynamoDB
-    6. Send Slack alert
+    6. Send Discord alert
     """
     logger.info("AIOps Sentinel triggered | requestId: %s",
                 context.aws_request_id if context else "local")
@@ -96,8 +96,8 @@ def lambda_handler(event, context):
         # ── 5. Save to DynamoDB ────────────────────────────────────
         _save_incident(enriched)
 
-        # ── 6. Send Slack alert ────────────────────────────────────
-        send_slack_alert(enriched)
+        # ── 6. Send Discord alert ──────────────────────────────────
+        send_alert(enriched)
 
         logger.info("Pipeline complete for incident: %s", incident["incident_id"])
 
@@ -137,7 +137,7 @@ def _save_incident(enriched: dict):
 
     except Exception as e:
         logger.error("DynamoDB save failed: %s", str(e))
-        # Don't raise — DynamoDB failure shouldn't block Slack alert
+        # Don't raise — DynamoDB failure shouldn't block the Discord alert
 
 
 def _ttl_30_days() -> int:

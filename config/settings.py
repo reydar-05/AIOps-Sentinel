@@ -28,12 +28,8 @@ class Settings:
     # DynamoDB
     DYNAMODB_TABLE_NAME: str = os.getenv("DYNAMODB_TABLE_NAME", "aiops-incidents")
 
-    # Slack
-    SLACK_WEBHOOK_URL: str = os.getenv("SLACK_WEBHOOK_URL", "")
-    SLACK_CHANNEL: str = os.getenv("SLACK_CHANNEL", "#aiops-alerts")
-    SECRETS_MANAGER_SLACK_SECRET_NAME: str = os.getenv(
-        "SECRETS_MANAGER_SLACK_SECRET_NAME", "aiops/slack/webhook"
-    )
+    # Discord
+    DISCORD_WEBHOOK_URL: str = os.getenv("DISCORD_WEBHOOK_URL", "")
 
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")

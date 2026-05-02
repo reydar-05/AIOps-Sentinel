@@ -12,7 +12,7 @@ SLOs tested:
     - Log sanitization    < 50 ms per 1000-line log
     - Log trimming        < 20 ms per 5000-char log
     - Full log pipeline   < 100 ms end-to-end
-    - Slack formatting    < 5 ms per message
+    - Discord formatting  < 5 ms per message
     - Throughput          > 100 events/second (sanitizer)
 """
 
@@ -35,7 +35,7 @@ from event_parser import parse_event  # noqa: E402
 from log_sanitizer import sanitize  # noqa: E402
 from log_trimmer import trim  # noqa: E402
 from processor import process  # noqa: E402
-from slack_formatter import format_alert  # noqa: E402
+from discord_formatter import format_alert  # noqa: E402
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
@@ -256,10 +256,10 @@ def test_full_pipeline_performance():
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TEST 5 — Slack Formatter Performance
+# TEST 5 — Discord Formatter Performance
 # ═══════════════════════════════════════════════════════════════════════════════
 def test_notification_formatter_performance():
-    print_section("PERF TEST 5: Slack Formatter Performance")
+    print_section("PERF TEST 5: Discord Formatter Performance")
     SLO_MS = 5.0
 
     _, mn, avg, mx, p95 = bench(format_alert, MOCK_ENRICHED, iterations=1000)
@@ -272,7 +272,7 @@ def test_notification_formatter_performance():
         payload = {**MOCK_ENRICHED, "ai_analysis": {**MOCK_ENRICHED["ai_analysis"], "severity": severity}}
         result, mn_s, avg_s, *_ = bench(format_alert, payload, iterations=200)
         assert result is not None, f"FAIL: format_alert returned None for {severity}"
-        print(f"  {severity:8} — avg={avg_s:.3f}ms  blocks={len(result['attachments'][0]['blocks'])}")
+        print(f"  {severity:8} — avg={avg_s:.3f}ms  fields={len(result['embeds'][0]['fields'])}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -302,15 +302,15 @@ def test_e2e_validation():
     # Step 3: Simulate AI analysis output
     processed["ai_analysis"] = MOCK_ENRICHED["ai_analysis"]
 
-    # Step 4: Format Slack message
+    # Step 4: Format Discord message
     message = format_alert(processed)
-    assert "attachments" in message,                         "FAIL: no Slack attachments"
+    assert "embeds" in message,                              "FAIL: no Discord embeds"
     msg_str = json.dumps(message)
-    assert incident["alarm_name"] in msg_str,                "FAIL: alarm name missing from Slack"
+    assert incident["alarm_name"] in msg_str,                "FAIL: alarm name missing from Discord"
     if incident.get("instance_id"):
-        assert incident["instance_id"] in msg_str,           "FAIL: instance ID missing from Slack"
-    assert "HIGH" in msg_str,                                "FAIL: severity missing from Slack"
-    print("  PASS: Step 3 — Slack message formatted with all required fields")
+        assert incident["instance_id"] in msg_str,           "FAIL: instance ID missing from Discord"
+    assert "HIGH" in msg_str,                                "FAIL: severity missing from Discord"
+    print("  PASS: Step 3 — Discord message formatted with all required fields")
 
     # Data integrity: incident_id must flow through all stages
     assert processed["incident_id"] == incident["incident_id"], "FAIL: incident_id mismatch"
@@ -396,7 +396,7 @@ if __name__ == "__main__":
         ("Log sanitization (p95)",        "< 50 ms",  "PASS"),
         ("Log trimming (p95)",            "< 20 ms",  "PASS"),
         ("Full log pipeline (p95)",       "< 100 ms", "PASS"),
-        ("Slack formatting (p95)",        "< 5 ms",   "PASS"),
+        ("Discord formatting (p95)",      "< 5 ms",   "PASS"),
         ("End-to-end data integrity",     "no leaks", "PASS"),
         ("Burst processing (50 events)",  "< 5 sec",  "PASS"),
     ]

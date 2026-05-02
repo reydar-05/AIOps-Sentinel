@@ -1,62 +1,64 @@
 """
-Notifier — sends formatted Slack alert via webhook.
-Fetches webhook securely from Secrets Manager.
+Notifier — sends formatted incident alerts to Discord via webhook.
 """
 
 import json
 import logging
+import os
 import urllib.request
 import urllib.error
 
-from secrets import get_slack_webhook
-from slack_formatter import format_alert
+from discord_formatter import format_alert as format_discord
 
 logger = logging.getLogger(__name__)
 
 
-def send_slack_alert(enriched_payload: dict) -> bool:
+def send_alert(enriched_payload: dict) -> bool:
     """
-    Format and send Slack alert for an enriched incident.
-    Returns True on success, False on failure.
+    Format and send a Discord alert for an enriched incident.
+    Returns True on success, False on failure or unconfigured webhook.
     """
+    severity = enriched_payload.get("ai_analysis", {}).get("severity", "UNKNOWN")
+    logger.info("Dispatching alert | severity: %s", severity)
+
+    webhook_url = os.environ.get("DISCORD_WEBHOOK_URL", "").strip()
+    if not webhook_url or "YOUR/WEBHOOK" in webhook_url:
+        logger.warning("DISCORD_WEBHOOK_URL not configured — skipping notification")
+        return False
+
     try:
-        # ── Get webhook URL from Secrets Manager ───────────────────
-        secret = get_slack_webhook()
-        webhook_url = secret.get("webhook_url")
+        message = format_discord(enriched_payload)
+        return _post(webhook_url, message)
+    except Exception as e:
+        logger.error("Discord send failed: %s", str(e))
+        return False
 
-        if not webhook_url or "REPLACE_ME" in webhook_url:
-            logger.warning("Slack webhook not configured — skipping notification")
-            return False
 
-        # ── Format the message ─────────────────────────────────────
-        message = format_alert(enriched_payload)
-        logger.info("Sending Slack alert | severity: %s",
-                    enriched_payload.get("ai_analysis", {}).get("severity"))
-
-        # ── POST to Slack ──────────────────────────────────────────
+def _post(url: str, message: dict) -> bool:
+    """POST a Discord webhook payload. Returns True on 204 No Content."""
+    try:
         payload = json.dumps(message).encode("utf-8")
         req = urllib.request.Request(
-            webhook_url,
+            url,
             data=payload,
-            headers={"Content-Type": "application/json"},
-            method="POST"
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "AIOps-Sentinel/1.0",
+            },
+            method="POST",
         )
 
         with urllib.request.urlopen(req, timeout=10) as response:
             status = response.getcode()
             body = response.read().decode("utf-8")
 
-        if status == 200 and body == "ok":
-            logger.info("Slack alert sent successfully")
+        if status == 204:
+            logger.info("Discord alert sent successfully")
             return True
-        else:
-            logger.error("Slack returned unexpected response: %d — %s", status, body)
-            return False
 
-    except urllib.error.HTTPError as e:
-        logger.error("Slack webhook HTTP error: %d — %s", e.code, e.read().decode())
+        logger.error("Discord returned unexpected response: %d — %s", status, body[:200])
         return False
 
-    except Exception as e:
-        logger.error("Failed to send Slack alert: %s", str(e))
+    except urllib.error.HTTPError as e:
+        logger.error("Discord webhook HTTP error: %d — %s", e.code, e.read().decode()[:200])
         return False

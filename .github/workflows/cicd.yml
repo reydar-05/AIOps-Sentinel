@@ -79,7 +79,6 @@ jobs:
           ENVIRONMENT:       dev
           DYNAMODB_TABLE_NAME: aiops-incidents-dev
           SNS_TOPIC_ARN:     arn:aws:sns:ap-south-1:000000000000:aiops-alerts
-          SLACK_SECRET_NAME: aiops/slack/webhook
 
       - name: Run log processor tests
         run: python tests/test_log_processor.py
@@ -87,8 +86,8 @@ jobs:
           AWS_REGION:  ap-south-1
           ENVIRONMENT: dev
 
-      - name: Run notification formatter tests
-        run: python tests/test_notifications.py
+      - name: Run Discord formatter tests
+        run: python tests/test_discord.py
         env:
           AWS_REGION:  ap-south-1
           ENVIRONMENT: dev
@@ -131,19 +130,21 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform plan -out=tfplan
         env:
-          TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
-          TF_VAR_alert_email:    ${{ secrets.ALERT_EMAIL }}
-          TF_VAR_ami_id:         ${{ secrets.AMI_ID }}
-          TF_VAR_groq_api_key:   ${{ secrets.GROQ_API_KEY }}
+          TF_VAR_aws_account_id:      ${{ secrets.AWS_ACCOUNT_ID }}
+          TF_VAR_alert_email:         ${{ secrets.ALERT_EMAIL }}
+          TF_VAR_ami_id:              ${{ secrets.AMI_ID }}
+          TF_VAR_groq_api_key:        ${{ secrets.GROQ_API_KEY }}
+          TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform apply -auto-approve tfplan
         env:
-          TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
-          TF_VAR_alert_email:    ${{ secrets.ALERT_EMAIL }}
-          TF_VAR_ami_id:         ${{ secrets.AMI_ID }}
-          TF_VAR_groq_api_key:   ${{ secrets.GROQ_API_KEY }}
+          TF_VAR_aws_account_id:      ${{ secrets.AWS_ACCOUNT_ID }}
+          TF_VAR_alert_email:         ${{ secrets.ALERT_EMAIL }}
+          TF_VAR_ami_id:              ${{ secrets.AMI_ID }}
+          TF_VAR_groq_api_key:        ${{ secrets.GROQ_API_KEY }}
+          TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
   # ── Job 4: Deploy Lambda ────────────────────────────────────
   deploy-lambda:
