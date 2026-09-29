@@ -87,7 +87,7 @@ python scripts/build_dashboard.py      # rebuilds dashboard/index.html from the 
 
 Or just double-click `dashboard/index.html`. It has an architecture view, an incident simulator (real parsing/redaction code on sample incidents; AI text and alerts are sample output), the AWS resource inventory, the CI/CD flow and module status. Fonts load from Google Fonts when online and fall back to system fonts offline.
 
-Full deployment: see [`STARTUP.md`](STARTUP.md). Project audit, architecture and review notes: [`docs/PROJECT_REVIEW.md`](docs/PROJECT_REVIEW.md).
+Full deployment: see [`STARTUP.md`](STARTUP.md). Review 1 documentation and run-and-show checklist: [`docs/REVIEW1_GUIDE.md`](docs/REVIEW1_GUIDE.md). Project audit, architecture and review notes: [`docs/PROJECT_REVIEW.md`](docs/PROJECT_REVIEW.md).
 
 ## Repository layout
 
