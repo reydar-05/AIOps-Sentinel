@@ -101,3 +101,6 @@ def _post(url: str, message: dict) -> bool:
     except urllib.error.HTTPError as e:
         logger.error("Discord webhook HTTP error: %d — %s", e.code, e.read().decode()[:200])
         return False
+    except (urllib.error.URLError, TimeoutError) as e:
+        logger.error("Discord webhook unreachable: %s", str(e))
+        return False

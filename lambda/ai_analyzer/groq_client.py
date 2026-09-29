@@ -13,17 +13,20 @@ logger = logging.getLogger(__name__)
 
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-# Models tried in order. Llama 3.3 70B is the strongest free model on Groq
-# and follows JSON instructions reliably; the 8B is a fast fallback.
-GROQ_MODELS = [
-    "llama-3.3-70b-versatile",
-    "llama-3.1-8b-instant",
-]
+# Models tried in order. Groq retired the Llama 3.x models on this account, so
+# we use OpenAI's open-weight gpt-oss models: 120B for quality, 20B as a fast
+# fallback. Both support JSON mode.
+# Override with GROQ_MODELS="modelA,modelB" if Groq retires a model or your
+# key only has access to different ones (a 404 model_not_found means this).
+GROQ_MODELS = [m.strip() for m in os.environ.get(
+    "GROQ_MODELS", "openai/gpt-oss-120b,openai/gpt-oss-20b").split(",") if m.strip()]
 
-MAX_TOKENS = int(os.environ.get("GROQ_MAX_TOKENS", "2048"))
+# gpt-oss models spend part of this budget on hidden reasoning tokens, so keep
+# it generous or the JSON answer can be cut off.
+MAX_TOKENS = int(os.environ.get("GROQ_MAX_TOKENS", "4096"))
 
 # Soft daily token ceiling. The free tier on Groq is generous (~14,400 req/day
-# on Llama 3.3 70B) but tokens-per-day is the harder limit. When this counter
+# on the large models) but tokens-per-day is the harder limit. When this counter
 # is exceeded the client emits a WARN log line — production should configure
 # CloudWatch metric filters to alarm on these warnings.
 DAILY_TOKEN_LIMIT = int(os.environ.get("GROQ_DAILY_TOKEN_LIMIT", "100000"))
@@ -46,13 +49,16 @@ def invoke(prompt: str) -> dict:
 
     last_error = None
     for model in GROQ_MODELS:
-        payload = json.dumps({
+        body_out = {
             "model": model,
             "messages": [{"role": "user", "content": prompt}],
             "max_tokens": MAX_TOKENS,
             "temperature": 0.1,
             "response_format": {"type": "json_object"},
-        }).encode("utf-8")
+        }
+        if "gpt-oss" in model:
+            body_out["reasoning_effort"] = "low"  # fast triage; only gpt-oss accepts this
+        payload = json.dumps(body_out).encode("utf-8")
 
         req = urllib.request.Request(
             GROQ_API_URL,

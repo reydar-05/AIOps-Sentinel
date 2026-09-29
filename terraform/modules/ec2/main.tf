@@ -22,9 +22,27 @@ resource "aws_launch_template" "app" {
     yum update -y
     yum install -y amazon-cloudwatch-agent stress-ng
 
+    # CloudWatch agent config: ship system + web logs to /aws/ec2/aiops so the
+    # Lambda pipeline has real logs to analyse (one stream per instance id).
+    cat > /opt/aws/amazon-cloudwatch-agent/etc/aiops-agent.json <<'CWCFG'
+    {
+      "logs": {
+        "logs_collected": {
+          "files": {
+            "collect_list": [
+              {"file_path": "/var/log/messages",          "log_group_name": "/aws/ec2/aiops", "log_stream_name": "{instance_id}/messages"},
+              {"file_path": "/var/log/httpd/error_log",   "log_group_name": "/aws/ec2/aiops", "log_stream_name": "{instance_id}/httpd-error"},
+              {"file_path": "/var/log/httpd/access_log",  "log_group_name": "/aws/ec2/aiops", "log_stream_name": "{instance_id}/httpd-access"}
+            ]
+          }
+        }
+      }
+    }
+    CWCFG
+
     # Start CloudWatch agent
     /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-      -a fetch-config -m ec2 -s -c default
+      -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/aiops-agent.json
 
     # Simple web server for health checks
     yum install -y httpd

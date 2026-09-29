@@ -78,6 +78,12 @@ module "ec2" {
   alb_security_group_id     = module.networking.alb_security_group_id
 }
 
+# ── EC2 log group (target of the CloudWatch agent; read by the Lambda) ──
+resource "aws_cloudwatch_log_group" "ec2_logs" {
+  name              = "/aws/ec2/aiops"
+  retention_in_days = 7
+}
+
 # ── CloudWatch Alarms ─────────────────────────────────────────────
 module "alarms" {
   source                = "../../modules/alarms"
@@ -98,7 +104,7 @@ module "lambda" {
   dynamodb_table_name       = var.dynamodb_table_name
   s3_log_bucket             = var.s3_log_bucket
   groq_api_key              = var.groq_api_key
-  groq_max_tokens           = "2048"
+  groq_max_tokens           = "4096"
   groq_daily_token_limit    = var.groq_daily_token_limit
   discord_webhook_url       = var.discord_webhook_url
   discord_review_webhook_url = var.discord_review_webhook_url

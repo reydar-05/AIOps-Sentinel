@@ -1,5 +1,7 @@
 # AIOps Sentinel — Startup Guide
 
+> **Note:** notifications now use **Discord** (set `DISCORD_WEBHOOK_URL`) and AI uses **Groq** (`GROQ_API_KEY`, free key at console.groq.com). Where this guide says Slack / OpenRouter / Secrets Manager webhook, use those instead. For a no-AWS quick start run `python scripts/demo.py`.
+
 Complete setup guide for deploying AIOps Sentinel from scratch in a new environment.
 
 ---
