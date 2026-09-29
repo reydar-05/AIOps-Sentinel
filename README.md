@@ -69,14 +69,14 @@ terraform/         modules/{networking,iam,ec2,alarms,lambda} · environments/de
 tests/             unit, end-to-end and performance tests, fixtures
 scripts/           demo.py · build_dashboard.py · deploy_lambda.py · verify_setup.py
 dashboard/         local single-file dashboard
-docs/              PROJECT_DOCUMENTATION · risk_analysis · scalability · security_hardening
+docs/              risk_analysis · scalability · security_hardening
 ```
 
 ## Documentation
 
-- [`docs/PROJECT_DOCUMENTATION.md`](docs/PROJECT_DOCUMENTATION.md): problem, architecture, design, testing and status
 - [`STARTUP.md`](STARTUP.md): deployment guide
 - [`docs/risk_analysis.md`](docs/risk_analysis.md), [`docs/scalability.md`](docs/scalability.md), [`docs/security_hardening.md`](docs/security_hardening.md)
+- Full project documentation (problem, architecture, design, testing and status) is kept as a separate Word document.
 
 ## License
 

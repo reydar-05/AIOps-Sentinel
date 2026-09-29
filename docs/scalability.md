@@ -3,7 +3,7 @@
 > **⚠️ Architecture update:** this document was written before two migrations. Read it with this mapping:
 > **Amazon Bedrock / OpenRouter → Groq (Llama 3.3 70B, 8B fallback)** · **Slack → Discord webhooks** ·
 > **Secrets Manager webhook → Lambda env vars injected by Terraform from GitHub Secrets**.
-> The current, code-accurate summary is in [`PROJECT_DOCUMENTATION.md`](PROJECT_DOCUMENTATION.md).
+> The current, code-accurate summary is kept as a Word document outside this repository.
 
 
 ## Overview
