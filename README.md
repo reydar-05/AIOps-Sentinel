@@ -28,7 +28,7 @@ EC2 State Change ─┘                           └─▶ Discord alert (colou
 | 2 | Fetch logs | `log_fetcher.py` | Last 15 min from CloudWatch Logs (`/aws/ec2/aiops`) |
 | 3 | Sanitise | `log_sanitizer.py` | Redacts IPs, AWS keys, passwords/tokens, e-mails, internal hostnames |
 | 4 | Trim | `log_trimmer.py` | Keeps error lines + latest lines, caps at 4 000 chars |
-| 5 | Analyse | `groq_client.py` + `rca_prompt.py` | Llama 3.3 70B → 3.1 8B fallback → safe hard-coded fallback if AI is down |
+| 5 | Analyse | `groq_client.py` + `rca_prompt.py` | gpt-oss-120b → gpt-oss-20b fallback → safe hard-coded fallback if AI is down |
 | 6 | Persist + notify | `handler.py`, `notifier.py`, `discord_formatter.py` | DynamoDB write, Discord embed |
 
 ## DevOps toolchain

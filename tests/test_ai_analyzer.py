@@ -83,7 +83,7 @@ def test_groq_rca():
         print("      Get a free key at https://console.groq.com/keys")
         return
 
-    print("Calling Groq Llama 3.3 70B...")
+    print("Calling Groq gpt-oss-120b...")
     print("This usually takes under 2 seconds...\n")
 
     result = analyze(MOCK_PAYLOAD)

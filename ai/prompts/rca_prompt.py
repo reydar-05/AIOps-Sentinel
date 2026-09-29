@@ -1,5 +1,5 @@
 """
-Root Cause Analysis prompt template for Groq Llama.
+Root Cause Analysis prompt template for Groq (gpt-oss).
 Designed for structured JSON output (response_format: json_object).
 """
 

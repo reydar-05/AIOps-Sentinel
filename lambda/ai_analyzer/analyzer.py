@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 def analyze(payload: dict) -> dict:
     """
     Run AI root cause analysis on a processed incident payload.
-    Uses Groq (Llama 3.3 70B). Returns enriched payload with AI analysis fields.
+    Uses Groq (gpt-oss-120b). Returns enriched payload with AI analysis fields.
     """
     logger.info("Starting AI analysis for incident: %s", payload.get("incident_id"))
 

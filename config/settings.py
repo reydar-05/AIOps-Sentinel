@@ -20,7 +20,7 @@ class Settings:
 
     # Groq AI
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-    GROQ_MAX_TOKENS: int = int(os.getenv("GROQ_MAX_TOKENS", "2048"))
+    GROQ_MAX_TOKENS: int = int(os.getenv("GROQ_MAX_TOKENS", "4096"))
 
     # SNS
     SNS_TOPIC_ARN: str = os.getenv("SNS_TOPIC_ARN", "")

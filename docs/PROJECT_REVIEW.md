@@ -34,7 +34,7 @@ DynamoDB failure never blocks the alert; unrecoverable errors go to the DLQ.
 | Monitoring | CloudWatch alarms/dashboard/agent, X-Ray tracing | `modules/alarms`, `dashboard.tf` |
 | Security | least-privilege IAM, log sanitiser, S3 encryption + public-access block, secrets via GitHub Secrets | `modules/iam`, `log_sanitizer.py` |
 | Testing | pytest, fixtures, performance SLO tests, live-AI quality gate | `tests/` |
-| AIOps | Groq Llama 3.3 70B, prompt engineering, confidence-based routing | `ai/prompts`, `groq_client.py` |
+| AIOps | Groq gpt-oss-120b, prompt engineering, confidence-based routing | `ai/prompts`, `groq_client.py` |
 
 ## 4. Audit results (this review)
 
@@ -71,7 +71,7 @@ handler end-to-end incl. AI-failure fallback, performance SLOs. **23 tests pass;
 
 1. **Concept** – slide/diagram from §2.
 2. `python scripts/demo.py` – shows the 5 stages live: raw logs with secrets → redacted → AI JSON → Discord message.
-   With `GROQ_API_KEY` set the AI stage is a real Llama call; with `DISCORD_WEBHOOK_URL` it posts to Discord.
+   With `GROQ_API_KEY` set the AI stage is a real LLM call; with `DISCORD_WEBHOOK_URL` it posts to Discord.
 3. `python -m pytest tests -q` – 23 passed.
 4. Show `terraform/` modules + `.github/workflows/cicd.yml` pipeline and the green Actions run.
 5. Show AWS console (if deployed): CloudWatch dashboard, DynamoDB incident table, Lambda logs.

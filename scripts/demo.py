@@ -6,7 +6,7 @@ classifier -> RCA prompt -> AI -> Discord formatter) on a sample incident
 and prints every stage.
 
   python scripts/demo.py               # canned AI response (fully offline)
-  GROQ_API_KEY=gsk_... python scripts/demo.py   # live Llama 3.3 70B analysis
+  GROQ_API_KEY=gsk_... python scripts/demo.py   # live LLM 3.3 70B analysis
   DISCORD_WEBHOOK_URL=... python scripts/demo.py  # also posts to Discord
 """
 import json
@@ -74,7 +74,7 @@ def main():
     banner(4, "AI root-cause analysis")
     if os.environ.get("GROQ_API_KEY"):
         from analyzer import analyze
-        print("Calling Groq (Llama 3.3 70B) ...")
+        print("Calling Groq (gpt-oss-120b) ...")
         enriched = analyze(payload)
     else:
         print("GROQ_API_KEY not set -> using canned AI response (prompt below is what would be sent)\n")
