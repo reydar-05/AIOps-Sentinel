@@ -15,10 +15,10 @@ GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 # Models tried in order. Llama 3.3 70B is the strongest free model on Groq
 # and follows JSON instructions reliably; the 8B is a fast fallback.
-GROQ_MODELS = [
-    "llama-3.3-70b-versatile",
-    "llama-3.1-8b-instant",
-]
+# Override with GROQ_MODELS="modelA,modelB" if Groq retires a model or your
+# key only has access to different ones (a 404 model_not_found means this).
+GROQ_MODELS = [m.strip() for m in os.environ.get(
+    "GROQ_MODELS", "llama-3.3-70b-versatile,llama-3.1-8b-instant").split(",") if m.strip()]
 
 MAX_TOKENS = int(os.environ.get("GROQ_MAX_TOKENS", "2048"))
 
