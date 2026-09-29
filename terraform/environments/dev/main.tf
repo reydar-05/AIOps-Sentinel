@@ -78,6 +78,12 @@ module "ec2" {
   alb_security_group_id     = module.networking.alb_security_group_id
 }
 
+# ── EC2 log group (target of the CloudWatch agent; read by the Lambda) ──
+resource "aws_cloudwatch_log_group" "ec2_logs" {
+  name              = "/aws/ec2/aiops"
+  retention_in_days = 7
+}
+
 # ── CloudWatch Alarms ─────────────────────────────────────────────
 module "alarms" {
   source                = "../../modules/alarms"

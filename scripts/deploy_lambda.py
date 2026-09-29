@@ -7,10 +7,11 @@ import os
 import sys
 import shutil
 import subprocess
+import tempfile
 import zipfile
 
 BASE_DIR      = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TMP_DIR       = os.path.join("C:\\Temp", "aiops_package_tmp")
+TMP_DIR       = os.path.join(tempfile.gettempdir(), "aiops_package_tmp")  # cross-platform (was C:\\Temp)
 ZIP_PATH      = os.path.join(BASE_DIR, "lambda_package.zip")
 FUNCTION_NAME = "aiops-incident-processor-dev"
 REGION        = "ap-south-1"
@@ -51,7 +52,7 @@ print("  Done")
 
 # Step 2: Install dependencies
 step(2, "Installing dependencies...")
-run(f"pip install boto3 requests -t \"{TMP_DIR}\" --quiet")
+run(f"{sys.executable} -m pip install requests -t \"{TMP_DIR}\" --quiet")
 print("  Done")
 
 # Step 3: Copy source files

@@ -69,8 +69,10 @@ def _parse_cloudwatch_alarm(message: dict, sns_record: dict) -> dict:
         if dim.get("name") == "AutoScalingGroupName":
             asg_name = dim.get("value")
 
-    # Derive log group from alarm name
-    log_group = "/aws/ec2/aiops" if instance_id else "/aws/lambda/aiops-incident-processor-dev"
+    # ASG-level alarms carry no InstanceId, but the ASG's instances still ship
+    # their logs to /aws/ec2/aiops — only fall back to the Lambda's own log
+    # group for alarms unrelated to EC2.
+    log_group = "/aws/ec2/aiops" if (instance_id or asg_name) else "/aws/lambda/aiops-incident-processor-dev"
 
     return {
         "incident_id": str(uuid.uuid4()),

@@ -39,7 +39,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install linting tools
-        run: pip install flake8 flake8-bugbear
+        run: pip install -r requirements.txt
 
       - name: Lint Lambda source
         run: |
@@ -70,7 +70,13 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
-        run: pip install boto3 pytest
+        run: pip install -r requirements.txt
+
+      - name: Run full offline test suite
+        run: python -m pytest tests -q
+        env:
+          AWS_REGION:        ap-south-1
+          ENVIRONMENT:       dev
 
       - name: Run event parser tests
         run: python tests/test_local_lambda.py
