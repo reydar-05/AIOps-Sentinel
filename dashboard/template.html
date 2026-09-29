@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AIOps Sentinel Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<style>
+/* Layout: console with a tab bar. Overview (architecture + status), Incident simulator, AWS inventory, DevOps pipeline, Roadmap. */
+:root{
+  --bg:#eef1f2; --panel:#ffffff; --ink:#152025; --muted:#5b6b73; --line:#d5dde0; --code:#f4f7f8;
+  --accent:#0d6e6e; --accent-soft:#d9eeee;
+  --good:#1b7f4b; --good-soft:#dcf1e5; --warn:#a8650c; --warn-soft:#f7e8d0; --crit:#b3372b; --crit-soft:#f8dcd8;
+  --skip:#66737b; --skip-soft:#e6eaec;
+  --display:'Fraunces',Georgia,serif; --sans:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1518; --panel:#151f24; --ink:#e3ebee; --muted:#93a5ad; --line:#26353c; --code:#101a1e;
+  --accent:#4fc3c3; --accent-soft:#12383a;
+  --good:#5fd19a; --good-soft:#12352a; --warn:#e8b060; --warn-soft:#3a2b12; --crit:#f08a7e; --crit-soft:#3d1c19;
+  --skip:#8fa0a8; --skip-soft:#1e2b31; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1518; --panel:#151f24; --ink:#e3ebee; --muted:#93a5ad; --line:#26353c; --code:#101a1e;
+  --accent:#4fc3c3; --accent-soft:#12383a;
+  --good:#5fd19a; --good-soft:#12352a; --warn:#e8b060; --warn-soft:#3a2b12; --crit:#f08a7e; --crit-soft:#3d1c19;
+  --skip:#8fa0a8; --skip-soft:#1e2b31; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:24px 56px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(28px,5vw,40px);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:600}
+h3{margin:0;font-size:15px}
+p{margin:0}
+header{display:flex;flex-direction:column;gap:10px}
+.sub{color:var(--muted);max-width:70ch}
+.note{background:var(--warn-soft);border:1px solid var(--warn);border-radius:6px;padding:10px 14px;font-size:13.5px}
+.note strong{color:var(--warn)}
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);padding-bottom:0}
+.tab{font:inherit;font-size:14px;font-weight:500;background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:10px 14px;cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+section.view{display:none;flex-direction:column;gap:20px}
+section.view.on{display:flex}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;min-width:0}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat .n{font-family:var(--display);font-size:36px;line-height:1;font-variant-numeric:tabular-nums}
+.stat .l{color:var(--muted);font-size:13px}
+.pill{font-family:var(--mono);font-size:11.5px;padding:3px 9px;border-radius:999px;font-weight:500;white-space:nowrap;display:inline-block}
+.pill.ok{background:var(--good-soft);color:var(--good)}
+.pill.wip{background:var(--warn-soft);color:var(--warn)}
+.pill.todo{background:var(--skip-soft);color:var(--skip)}
+.pill.m{background:var(--accent-soft);color:var(--accent)}
+.pill.HIGH,.pill.CRITICAL{background:var(--crit-soft);color:var(--crit)}
+.pill.MEDIUM{background:var(--warn-soft);color:var(--warn)}
+.pill.LOW{background:var(--good-soft);color:var(--good)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:560px}
+th{text-align:left;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+code,.mono{font-family:var(--mono);font-size:12px}
+td code{color:var(--muted);overflow-wrap:anywhere}
+pre{margin:0;background:var(--code);border:1px solid var(--line);border-radius:6px;padding:12px;font-family:var(--mono);font-size:12.5px;line-height:1.55;overflow-x:auto;white-space:pre}
+.diagram{overflow-x:auto}
+.diagram svg{min-width:860px;width:100%;height:auto;display:block}
+.diagram text{font-family:var(--sans);fill:var(--ink)}
+.diagram .sm{font-size:11px;fill:var(--muted)}
+.diagram .box{fill:var(--code);stroke:var(--line);stroke-width:1.2}
+.diagram .hl{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.4}
+.diagram .ext{fill:var(--warn-soft);stroke:var(--warn);stroke-width:1.2}
+.diagram .ln{stroke:var(--muted);stroke-width:1.4;fill:none}
+.diagram .dash{stroke-dasharray:5 4}
+/* simulator */
+.pick{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:13.5px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:8px 12px;cursor:pointer;text-align:left}
+.chip small{display:block;color:var(--muted);font-size:11.5px}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.btn{font:inherit;font-size:13.5px;font-weight:500;border:1px solid var(--accent);background:var(--accent);color:var(--panel);border-radius:6px;padding:8px 14px;cursor:pointer}
+.stages{display:flex;flex-direction:column;gap:10px}
+.stage{border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--panel)}
+.stage header{flex-direction:row;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px}
+.stage header b{font-size:14px}
+.stage header span{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.hidden-stage{opacity:.25}
+.tag{color:var(--crit);background:var(--crit-soft);padding:0 3px;border-radius:3px}
+.red{color:var(--good);background:var(--good-soft);padding:0 3px;border-radius:3px}
+.embed{border-left:4px solid var(--warn);background:var(--code);border-radius:4px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.embed .t{font-weight:600}
+.embed .d{color:var(--muted);font-size:13.5px}
+.fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 14px}
+.fields small,.full small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.fields span,.full span{font-size:13px;overflow-wrap:anywhere}
+/* flow */
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.fs{flex:1 1 130px;border:1px solid var(--line);border-radius:6px;background:var(--code);padding:10px 12px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.fs b{font-size:13.5px}
+.fs span{font-size:12px;color:var(--muted)}
+.fs.gate{border-color:var(--warn)}
+.road{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.road .panel{display:flex;flex-direction:column;gap:10px}
+.road ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.road li{display:flex;gap:8px;justify-content:space-between;align-items:flex-start;font-size:13.5px}
+footer{color:var(--muted);font-size:12.5px}
+@media (max-width:560px){.fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>AIOps Sentinel</h1>
+  <p class="sub">When AWS infrastructure raises an alarm, the system collects the logs, removes secrets, asks an AI for the root cause, saves the incident and alerts the team on Discord.</p>
+  <p class="note"><strong>Simulated incidents.</strong> The incident simulator runs the project's real parsing, redaction, trimming and classification code on sample events. The AI text and the Discord alert are sample output. Nothing here is a live AWS reading; live alarms need the deployed stack (Modules 2 and 3).</p>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button class="tab" role="tab" data-v="overview" aria-selected="true">Overview</button>
+  <button class="tab" role="tab" data-v="sim" aria-selected="false">Incident simulator</button>
+  <button class="tab" role="tab" data-v="infra" aria-selected="false">AWS infrastructure</button>
+  <button class="tab" role="tab" data-v="devops" aria-selected="false">DevOps pipeline</button>
+  <button class="tab" role="tab" data-v="status" aria-selected="false">Status and roadmap</button>
+</nav>
+
+<!-- OVERVIEW -->
+<section class="view on" id="v-overview">
+  <div class="grid g4">
+    <div class="panel stat"><span class="n">7</span><span class="l">pipeline stages, alarm to alert</span></div>
+    <div class="panel stat"><span class="n">4</span><span class="l">CloudWatch alarms plus one EC2 state rule</span></div>
+    <div class="panel stat"><span class="n">5</span><span class="l">Terraform modules</span></div>
+    <div class="panel stat"><span class="n">26</span><span class="l">automated tests, CI green</span></div>
+  </div>
+  <div class="panel">
+    <h2>Architecture</h2>
+    <div class="diagram">
+    <svg viewBox="0 0 900 380" role="img" aria-label="Architecture: alarms and EC2 events go through SNS to a Lambda pipeline that reads CloudWatch Logs, calls Groq, and writes to DynamoDB and Discord">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+      <rect class="box" x="10" y="20" width="170" height="150" rx="8"/><text x="24" y="42" font-size="12" font-weight="600">Monitored workload</text>
+      <text class="sm" x="24" y="64">VPC, ALB</text><text class="sm" x="24" y="82">Auto Scaling Group</text><text class="sm" x="24" y="100">EC2 + CloudWatch agent</text>
+      <text class="sm" x="24" y="128">Alarms: CPU, status,</text><text class="sm" x="24" y="144">network in</text>
+      <rect class="box" x="10" y="200" width="170" height="60" rx="8"/><text x="24" y="224" font-size="12" font-weight="600">EventBridge rule</text><text class="sm" x="24" y="244">EC2 stopped / terminated</text>
+      <rect class="hl" x="235" y="110" width="110" height="60" rx="8"/><text x="256" y="138" font-size="13" font-weight="600">SNS topic</text><text class="sm" x="256" y="156">aiops-alerts</text>
+      <rect class="hl" x="400" y="20" width="270" height="290" rx="8"/><text x="416" y="44" font-size="13" font-weight="600">Lambda incident processor</text><text class="sm" x="416" y="60">Python 3.12, 512 MB, X-Ray on</text>
+      <g font-size="12"><text x="416" y="90">1 Parse the event</text><text x="416" y="118">2 Fetch 15 min of logs</text><text x="416" y="146">3 Redact secrets</text><text x="416" y="174">4 Trim to 4,000 chars</text><text x="416" y="202">5 AI root-cause analysis</text><text x="416" y="230">6 Save to DynamoDB</text><text x="416" y="258">7 Send Discord alert</text></g>
+      <text class="sm" x="416" y="288">AI down: safe fallback still alerts</text>
+      <rect class="box" x="720" y="20" width="170" height="60" rx="8"/><text x="734" y="44" font-size="12" font-weight="600">CloudWatch Logs</text><text class="sm" x="734" y="64">/aws/ec2/aiops</text>
+      <rect class="ext" x="720" y="110" width="170" height="60" rx="8"/><text x="734" y="134" font-size="12" font-weight="600">Groq API</text><text class="sm" x="734" y="154">gpt-oss-120b, 20b fallback</text>
+      <rect class="box" x="720" y="200" width="170" height="50" rx="8"/><text x="734" y="222" font-size="12" font-weight="600">DynamoDB</text><text class="sm" x="734" y="240">incident, 30-day TTL</text>
+      <rect class="ext" x="720" y="270" width="170" height="50" rx="8"/><text x="734" y="292" font-size="12" font-weight="600">Discord webhook</text><text class="sm" x="734" y="310">LOW confidence: review</text>
+      <rect class="box" x="400" y="335" width="270" height="34" rx="8"/><text x="416" y="357" font-size="12">SQS dead-letter queue on failure</text>
+      <path class="ln" d="M180 95 L235 130" marker-end="url(#ar)"/><path class="ln" d="M180 230 L235 155" marker-end="url(#ar)"/>
+      <path class="ln" d="M345 140 L400 140" marker-end="url(#ar)"/>
+      <path class="ln" d="M670 105 L720 55" marker-end="url(#ar)"/><path class="ln" d="M670 140 L720 140" marker-end="url(#ar)"/>
+      <path class="ln" d="M670 232 L720 225" marker-end="url(#ar)"/><path class="ln" d="M670 290 L720 295" marker-end="url(#ar)"/>
+      <path class="ln dash" d="M535 310 L535 335" marker-end="url(#ar)"/>
+      <path class="ln dash" d="M95 170 C95 300 95 330 720 60" opacity="0"/>
+      <text class="sm" x="30" y="190">logs flow to CloudWatch Logs</text>
+    </svg></div>
+  </div>
+  <div class="panel">
+    <h2>Modules</h2>
+    <div class="tw"><table>
+      <thead><tr><th>Module</th><th>Focus</th><th>Tools</th><th>State</th></tr></thead>
+      <tbody>
+        <tr><td><b>1</b> Source control, CI and testing</td><td>Working app, quality gates</td><td>Git, GitHub Actions, flake8, pytest, Groq</td><td><span class="pill ok">complete</span></td></tr>
+        <tr><td><b>2</b> Infrastructure as Code and cloud</td><td>Reproducible AWS stack, automated deploy</td><td>Terraform, AWS, CD jobs</td><td><span class="pill wip">written, not deployed</span></td></tr>
+        <tr><td><b>3</b> Monitoring, security and AIOps</td><td>Real alarms end to end, hardening</td><td>CloudWatch, X-Ray, IAM, Secrets Manager</td><td><span class="pill wip">written, not verified live</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- SIMULATOR -->
+<section class="view" id="v-sim">
+  <div class="panel">
+    <h2>Choose a simulated incident</h2>
+    <div class="pick" id="pick"></div>
+    <p style="margin-top:12px"><button class="btn" id="replay">Replay stage by stage</button></p>
+  </div>
+  <div class="stages" id="stages"></div>
+</section>
+
+<!-- INFRA -->
+<section class="view" id="v-infra">
+  <div class="panel">
+    <h2>AWS resources defined in Terraform (region ap-south-1, environment dev)</h2>
+    <div class="tw"><table>
+      <thead><tr><th>Area</th><th>Resource</th><th>Configuration</th><th>Module</th></tr></thead>
+      <tbody id="infra-rows"></tbody>
+    </table></div>
+  </div>
+  <p class="sub">Read from the repository's Terraform code. None of it has been applied yet from this project's CI, so this is the intended state, not a live account view.</p>
+</section>
+
+<!-- DEVOPS -->
+<section class="view" id="v-devops">
+  <div class="panel">
+    <h2>CI/CD flow, .github/workflows/cicd.yml</h2>
+    <div class="flow">
+      <div class="fs"><b>Push or pull request</b><span>to main</span></div>
+      <div class="fs"><b>Lint</b><span>flake8 + bugbear</span></div>
+      <div class="fs"><b>Test</b><span>pytest + live AI check</span></div>
+      <div class="fs gate"><b>Terraform</b><span>validate, plan, apply (main only)</span></div>
+      <div class="fs gate"><b>Deploy Lambda</b><span>package and update function code</span></div>
+      <div class="fs gate"><b>Smoke test</b><span>invoke with a sample alarm</span></div>
+    </div>
+    <p class="sub" style="margin-top:10px">The first three steps run on every pull request. The highlighted steps run only after a merge to main and need AWS credentials in GitHub Secrets.</p>
+  </div>
+  <div class="panel">
+    <h2>DevOps tools</h2>
+    <div class="tw"><table>
+      <thead><tr><th>Practice</th><th>Tool</th><th>Where</th><th>Module</th></tr></thead>
+      <tbody>
+        <tr><td>Version control</td><td>Git, GitHub</td><td><code>pull request workflow</code></td><td><span class="pill m">1</span></td></tr>
+        <tr><td>Continuous integration</td><td>GitHub Actions</td><td><code>.github/workflows/cicd.yml</code></td><td><span class="pill m">1</span></td></tr>
+        <tr><td>Static analysis</td><td>flake8, flake8-bugbear</td><td><code>Lint job</code></td><td><span class="pill m">1</span></td></tr>
+        <tr><td>Automated testing</td><td>pytest, fixtures</td><td><code>tests/</code></td><td><span class="pill m">1</span></td></tr>
+        <tr><td>AIOps</td><td>Groq LLM</td><td><code>lambda/ai_analyzer</code></td><td><span class="pill m">1</span></td></tr>
+        <tr><td>Infrastructure as Code</td><td>Terraform, S3 remote state</td><td><code>terraform/</code></td><td><span class="pill m">2</span></td></tr>
+        <tr><td>Continuous delivery</td><td>GitHub Actions, AWS CLI</td><td><code>scripts/deploy_lambda.py</code></td><td><span class="pill m">2</span></td></tr>
+        <tr><td>Observability</td><td>CloudWatch, X-Ray</td><td><code>modules/alarms, dashboard.tf</code></td><td><span class="pill m">3</span></td></tr>
+        <tr><td>Security</td><td>IAM least privilege, log redaction</td><td><code>modules/iam, log_sanitizer.py</code></td><td><span class="pill m">3</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- STATUS -->
+<section class="view" id="v-status">
+  <div class="road">
+    <div class="panel"><h3>Module 1: CI and testing</h3><ul>
+      <li><span>Event parser, redaction, trimmer, classifier</span><span class="pill ok">tested</span></li>
+      <li><span>AI client with model fallback</span><span class="pill ok">tested, live in CI</span></li>
+      <li><span>Discord formatter and routing</span><span class="pill ok">tested</span></li>
+      <li><span>Lint and unit-test pipeline</span><span class="pill ok">green</span></li>
+    </ul></div>
+    <div class="panel"><h3>Module 2: Infrastructure</h3><ul>
+      <li><span>Terraform modules (networking, iam, ec2, alarms, lambda)</span><span class="pill wip">written</span></li>
+      <li><span>terraform validate and plan</span><span class="pill todo">to do</span></li>
+      <li><span>Deploy to AWS from CI</span><span class="pill todo">to do</span></li>
+      <li><span>Lambda smoke test in the cloud</span><span class="pill todo">to do</span></li>
+    </ul></div>
+    <div class="panel"><h3>Module 3: Monitoring and security</h3><ul>
+      <li><span>Alarms, dashboard, EC2 log shipping</span><span class="pill wip">written</span></li>
+      <li><span>Real alarm produces a Discord alert</span><span class="pill todo">to do</span></li>
+      <li><span>Secrets moved to Secrets Manager</span><span class="pill todo">planned</span></li>
+      <li><span>Automatic remediation</span><span class="pill todo">future work</span></li>
+    </ul></div>
+  </div>
+  <div class="panel">
+    <h2>Known limitations</h2>
+    <ul style="margin:0;padding-left:18px;color:var(--muted);font-size:13.5px;display:flex;flex-direction:column;gap:6px">
+      <li>The Groq key and webhook are Lambda environment variables, so they appear in Terraform state.</li>
+      <li>The daily token limit is a warning per Lambda container, not a hard cap.</li>
+      <li>Suggested actions are advice; nothing is fixed automatically.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>Simulator results come from running the repository's own code on sample events. Status reflects the repository at the latest commit on the pull request.</footer>
+</div>
+
+<script>
+var SCEN = __SCEN__;
+var INFRA = [
+ ["Network","VPC, public and private subnets, internet gateway, route table","Two security groups (EC2, ALB)","networking"],
+ ["Compute","Application Load Balancer, target group, listener","Health checks on the web server","ec2"],
+ ["Compute","Launch template + Auto Scaling Group","t3.micro, min 1, desired 2, max 3, two scaling policies, CloudWatch agent installed","ec2"],
+ ["Monitoring","CloudWatch alarm aiops-high-cpu","CPUUtilization above 80%","alarms"],
+ ["Monitoring","CloudWatch alarm aiops-low-cpu","CPUUtilization below 20%","alarms"],
+ ["Monitoring","CloudWatch alarm aiops-status-check-failed","StatusCheckFailed at 1 or more","alarms"],
+ ["Monitoring","CloudWatch alarm aiops-network-in-high","NetworkIn above 50 MB","alarms"],
+ ["Monitoring","CloudWatch log group /aws/ec2/aiops","7-day retention, fed by the agent","dev"],
+ ["Monitoring","CloudWatch dashboard","Metrics and incident widgets","dev"],
+ ["Events","EventBridge rule aiops-ec2-state-change","EC2 stopped, stopping or terminated","dev"],
+ ["Events","SNS topic aiops-alerts-dev","Optional email subscription","dev"],
+ ["Processing","Lambda aiops-incident-processor-dev","Python 3.12, 512 MB, 300 s timeout, X-Ray active","lambda"],
+ ["Processing","SQS dead-letter queue","Captures failed invocations","lambda"],
+ ["Storage","DynamoDB aiops-incidents-dev","Pay per request, 30-day TTL","dev"],
+ ["Storage","S3 log archive","Encrypted, public access blocked, Infrequent Access at 30 days, Glacier at 90, delete at 365","dev"],
+ ["Security","IAM roles for EC2 and Lambda","EC2: SSM and CloudWatch agent. Lambda: scoped logs, DynamoDB, S3, SQS, SNS, X-Ray","iam"]
+];
+var TABS=document.querySelectorAll(".tab"), VIEWS=document.querySelectorAll(".view");
+function show(id){
+  TABS.forEach(function(t){t.setAttribute("aria-selected", t.dataset.v===id ? "true":"false")});
+  VIEWS.forEach(function(v){v.classList.toggle("on", v.id==="v-"+id)});
+}
+TABS.forEach(function(t){t.addEventListener("click",function(){show(t.dataset.v)})});
+
+// infra table
+var ir=document.getElementById("infra-rows");
+INFRA.forEach(function(r){
+  var tr=document.createElement("tr");
+  [r[0],r[1],r[2]].forEach(function(x){var td=document.createElement("td");td.textContent=x;tr.appendChild(td)});
+  var td=document.createElement("td");var c=document.createElement("code");c.textContent=r[3];td.appendChild(c);tr.appendChild(td);
+  ir.appendChild(tr);
+});
+
+// simulator
+var current=0, timers=[];
+var pick=document.getElementById("pick"), stagesEl=document.getElementById("stages");
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function mark(text,cls){return text.replace(/\[([A-Z_]+_REDACTED)\]/g,'<span class="red">[$1]</span>')}
+function rawMark(text){
+  var t=esc(text);
+  [/password=\S+/g,/\b(?:\d{1,3}\.){3}\d{1,3}\b/g,/ip-[\d-]+\.[\w.-]+\.internal/g,/[\w.+-]+@[\w-]+\.[\w.]+/g,/token=\S+/g].forEach(function(re){t=t.replace(re,function(m){return '<span class="tag">'+m+'</span>'})});
+  return t;
+}
+function stageHTML(s){
+  var ai=s.ai;
+  return [
+   ["1 Parse the event","event_parser.py","<pre>"+esc("event_type : "+s.event_type+"\nalarm      : "+s.alarm+"\nstate      : "+s.state+"\ntrigger    : "+s.trigger+"\nlog group  : "+s.log_group)+"</pre>"],
+   ["2 Fetch logs, secrets still present","log_fetcher.py","<pre>"+rawMark(s.raw)+"</pre>"],
+   ["3 Redact and trim","log_sanitizer.py, log_trimmer.py","<pre>"+mark(esc(s.clean))+"</pre><p class='sub'>Pre-classified as <b>"+s.error_type+"</b>. "+s.chars+" characters go to the AI. Error lines are moved to the top.</p>"],
+   ["4 AI analysis (sample output)","groq_client.py","<pre>"+esc(JSON.stringify({severity:ai.severity,confidence:ai.confidence,summary:ai.summary,root_cause:ai.root_cause,immediate_actions:ai.actions,long_term_fix:ai.fix},null,2))+"</pre>"],
+   ["5 Save and alert (sample)","notifier.py, DynamoDB",
+    "<div class='embed'><div class='t'>AIOps Sentinel - "+ai.severity+": "+esc(s.alarm)+"</div><div class='d'>"+esc(ai.summary)+"</div><div class='fields'><div><small>Severity</small><span>"+ai.severity+"</span></div><div><small>Confidence</small><span>"+ai.confidence+"</span></div><div><small>Error type</small><span>"+s.error_type+"</span></div></div><div class='full'><small>Root cause</small><span>"+esc(ai.root_cause)+"</span></div><div class='full'><small>Immediate actions</small><span>"+ai.actions.map(function(a,i){return (i+1)+". "+esc(a)}).join("<br>")+"</span></div></div>"]
+  ];
+}
+function render(idx,upto){
+  current=idx;
+  pick.querySelectorAll(".chip").forEach(function(c,i){c.setAttribute("aria-pressed",i===idx?"true":"false")});
+  var st=stageHTML(SCEN[idx]);
+  stagesEl.innerHTML="";
+  st.forEach(function(x,i){
+    var d=document.createElement("div");d.className="stage"+(i>=upto?" hidden-stage":"");
+    d.innerHTML="<header><b>"+x[0]+"</b><span>"+x[1]+"</span></header>"+(i<upto?x[2]:"<p class='sub'>waiting</p>");
+    stagesEl.appendChild(d);
+  });
+}
+SCEN.forEach(function(s,i){
+  var b=document.createElement("button");b.className="chip";b.type="button";
+  b.innerHTML=esc(s.title)+"<small>"+esc(s.trigger)+"</small>";
+  b.addEventListener("click",function(){clearT();render(i,5)});
+  pick.appendChild(b);
+});
+function clearT(){timers.forEach(clearTimeout);timers=[]}
+document.getElementById("replay").addEventListener("click",function(){
+  clearT();render(current,0);
+  var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce){render(current,5);return}
+  for(var i=1;i<=5;i++){(function(n){timers.push(setTimeout(function(){render(current,n)},n*700))})(i)}
+});
+render(0,5);
+</script>
+</body>
+</html>

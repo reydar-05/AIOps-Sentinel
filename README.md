@@ -61,7 +61,7 @@ git clone https://github.com/reydar-05/AIOps-Sentinel.git && cd AIOps-Sentinel
 git checkout claude/practical-goldberg-r6m7ru      # until PR #1 is merged
 pip install -r requirements.txt
 python scripts/demo.py            # runs the real pipeline on a sample incident, prints every stage
-python -m pytest tests -q         # 25 offline tests
+python -m pytest tests -q         # 26 offline tests
 ```
 
 Live AI analysis (optional; otherwise the demo uses a canned AI response):
@@ -78,6 +78,14 @@ GROQ_API_KEY=gsk_... python scripts/demo.py
 ```
 
 Optionally set `DISCORD_WEBHOOK_URL` to post the alert to a Discord channel. If Groq returns `model_not_found`, list the models your key can use (`GET https://api.groq.com/openai/v1/models`) and set `GROQ_MODELS="modelA,modelB"`.
+
+### Project dashboard (local, no server)
+
+```bash
+python scripts/build_dashboard.py      # rebuilds dashboard/index.html from the real pipeline code and opens it
+```
+
+Or just double-click `dashboard/index.html`. It has an architecture view, an incident simulator (real parsing/redaction code on sample incidents; AI text and alerts are sample output), the AWS resource inventory, the CI/CD flow and module status. Fonts load from Google Fonts when online and fall back to system fonts offline.
 
 Full deployment: see [`STARTUP.md`](STARTUP.md). Project audit, architecture and review notes: [`docs/PROJECT_REVIEW.md`](docs/PROJECT_REVIEW.md).
 

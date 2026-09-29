@@ -64,7 +64,7 @@ Module 1 demo uses simulated events (`tests/fixtures`, `scripts/demo.py`); real-
 ### Verified working (offline)
 Event parsing (CloudWatch + EC2), sanitisation (IP, keys, passwords, e-mail, internal hosts), trimming,
 error classification, RCA prompt, Groq response parsing/validation, Discord formatting and webhook routing,
-handler end-to-end incl. AI-failure fallback, performance SLOs. **25 tests pass; flake8 clean; CI green on PR #1.**
+handler end-to-end incl. AI-failure fallback, performance SLOs. **26 tests pass; flake8 clean; CI green on PR #1.**
 
 ### Not verifiable without cloud credentials
 `terraform validate/plan/apply`, live Groq calls, real Discord delivery, deployed Lambda smoke test.
@@ -82,7 +82,7 @@ handler end-to-end incl. AI-failure fallback, performance SLOs. **25 tests pass;
 1. **Concept** – slide/diagram from §2.
 2. `python scripts/demo.py` – shows the 5 stages live: raw logs with secrets → redacted → AI JSON → Discord message.
    With `GROQ_API_KEY` set the AI stage is a real LLM call; with `DISCORD_WEBHOOK_URL` it posts to Discord.
-3. `python -m pytest tests -q` – 25 passed.
+3. `python -m pytest tests -q` – 26 passed.
 4. Show `terraform/` modules + `.github/workflows/cicd.yml` pipeline and the green Actions run.
 5. Show AWS console (if deployed): CloudWatch dashboard, DynamoDB incident table, Lambda logs.
 6. Trigger a real incident: `aws ec2 stop-instances ...` or `stress-ng` on an instance → Discord alert.
