@@ -1,5 +1,5 @@
 """
-AIOps Sentinel — offline demo for reviews. No AWS account needed.
+AIOps Sentinel — offline demo. No AWS account needed.
 
 Runs the REAL pipeline code (event parser -> log sanitizer -> trimmer ->
 classifier -> RCA prompt -> AI -> Discord formatter) on a sample incident
