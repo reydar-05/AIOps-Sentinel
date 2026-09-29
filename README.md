@@ -20,6 +20,16 @@ CloudWatch Alarm ─┐
 EC2 State Change ─┘                           └─▶ Discord alert (colour-coded, low-confidence → review channel)
 ```
 
+## Project modules (three reviews)
+
+| Module | Focus | Tools | Status |
+|--------|-------|-------|--------|
+| **1. Source control, CI and testing** | Code quality pipeline and a working, testable app | Git/GitHub, GitHub Actions, flake8, pytest, Groq LLM | **Complete.** CI green on PR #1 |
+| **2. Infrastructure as Code and cloud** | Reproducible AWS infrastructure and automated deployment | Terraform (5 modules, S3 remote state), AWS Lambda / SNS / SQS / DynamoDB / EC2 + ALB, CD jobs | Code written, to be validated and deployed |
+| **3. Monitoring, security and AIOps** | Real alarms end to end, observability, hardening | CloudWatch alarms + dashboard + agent, X-Ray, IAM, Secrets Manager | Code written, to be verified live |
+
+> **Simulated vs real.** In Module 1 every incident is a simulated event: the SNS/CloudWatch payloads and sample logs live in `tests/fixtures` and `scripts/demo.py`. The CI runs and the live Groq call in CI are real. Real-time alarms from a running AWS system arrive with Modules 2 and 3.
+
 ## Pipeline (`lambda/incident_processor/handler.py`)
 
 | # | Stage | Module | What it does |
@@ -31,27 +41,43 @@ EC2 State Change ─┘                           └─▶ Discord alert (colou
 | 5 | Analyse | `groq_client.py` + `rca_prompt.py` | gpt-oss-120b → gpt-oss-20b fallback → safe hard-coded fallback if AI is down |
 | 6 | Persist + notify | `handler.py`, `notifier.py`, `discord_formatter.py` | DynamoDB write, Discord embed |
 
-## DevOps toolchain
+## DevOps toolchain (by module)
 
 | Practice | Tool |
 |----------|------|
-| Source control & collaboration | Git + GitHub |
-| CI/CD | GitHub Actions (lint → test → terraform apply → deploy Lambda → smoke test) |
-| Infrastructure as Code | Terraform (modular: networking, iam, ec2, alarms, lambda) + S3 remote state |
-| Cloud | AWS – EC2 Auto Scaling + ALB, Lambda, SNS, SQS DLQ, DynamoDB, S3, EventBridge, X-Ray |
-| Monitoring & observability | CloudWatch alarms, dashboard, logs, agent on EC2 |
-| Code quality | flake8 (+bugbear), pytest, offline test suite |
-| Secrets management | GitHub Secrets → `TF_VAR_*` → Lambda env vars; `.env` git-ignored |
-| AIOps | Groq LLM for automated root-cause analysis |
+| Source control & collaboration (M1) | Git + GitHub |
+| CI (M1) / CD (M2) | GitHub Actions: lint → test on every push and PR; terraform apply → deploy Lambda → smoke test on `main` |
+| Infrastructure as Code (M2) | Terraform (modular: networking, iam, ec2, alarms, lambda) + S3 remote state |
+| Cloud (M2) | AWS – EC2 Auto Scaling + ALB, Lambda, SNS, SQS DLQ, DynamoDB, S3, EventBridge, X-Ray |
+| Monitoring & observability (M3) | CloudWatch alarms, dashboard, logs, agent on EC2 |
+| Code quality (M1) | flake8 (+bugbear), pytest, offline test suite |
+| Secrets management (M3) | GitHub Secrets → `TF_VAR_*` → Lambda env vars; `.env` git-ignored |
+| AIOps (M1) | Groq LLM (`gpt-oss-120b`, fallback `gpt-oss-20b`) for automated root-cause analysis |
 
-## Quick start (no AWS needed)
+## Quick start (Module 1, no AWS needed)
 
 ```bash
+git clone https://github.com/reydar-05/AIOps-Sentinel.git && cd AIOps-Sentinel
+git checkout claude/practical-goldberg-r6m7ru      # until PR #1 is merged
 pip install -r requirements.txt
 python scripts/demo.py            # runs the real pipeline on a sample incident, prints every stage
-python -m pytest tests -q         # 23 offline tests
-GROQ_API_KEY=gsk_... python scripts/demo.py   # live AI analysis
+python -m pytest tests -q         # 25 offline tests
 ```
+
+Live AI analysis (optional; otherwise the demo uses a canned AI response):
+
+```powershell
+# Windows PowerShell
+$env:GROQ_API_KEY = "gsk_..."
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+python scripts/demo.py
+```
+```bash
+# macOS / Linux
+GROQ_API_KEY=gsk_... python scripts/demo.py
+```
+
+Optionally set `DISCORD_WEBHOOK_URL` to post the alert to a Discord channel. If Groq returns `model_not_found`, list the models your key can use (`GET https://api.groq.com/openai/v1/models`) and set `GROQ_MODELS="modelA,modelB"`.
 
 Full deployment: see [`STARTUP.md`](STARTUP.md). Project audit, architecture and review notes: [`docs/PROJECT_REVIEW.md`](docs/PROJECT_REVIEW.md).
 
